@@ -5,9 +5,7 @@
 
 ### 依赖方式
 
-```
 [![](https://jitpack.io/v/com.gitee.yupfeg/logger.svg)](https://jitpack.io/#com.gitee.yupfeg/logger)
-```
 
 ```groovy
 //root project build.gradle
