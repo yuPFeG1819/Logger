@@ -4,8 +4,8 @@ plugins {
     // JitPack Maven
     id "com.github.dcendents.android-maven"
 }
-//github的username
-group = "com.github.yuPFeG1819"
+//上传的jitpack仓库group
+group = "com.yupfeg.logger"
 
 android {
     compileSdkVersion 30

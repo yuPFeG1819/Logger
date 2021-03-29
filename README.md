@@ -1,6 +1,25 @@
 ## Logger
 模仿[SAF-Kotlin-log](https://github.com/fengzhizi715/SAF-Kotlin-log)的自用日志库
 
+
+
+### 依赖方式
+
+[![img](https://jitpack.io/v/yuPFeG1819/Logger.svg)](https://jitpack.io/#)
+
+```groovy
+//root project build.gradle
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+//module build.gradle
+dependencies {
+    implementation 'com.yupfeg.logger:Logger:${lastVersion}'
+}
+```
+
 ## 简单使用
 
 通过`kotlin`的**top-level**函数包装，可在外部通过导入`com.yupfeg.logger.ext`包直接调用
