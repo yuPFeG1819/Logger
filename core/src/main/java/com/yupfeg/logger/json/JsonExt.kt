@@ -3,7 +3,6 @@ package com.yupfeg.logger.json
 import android.os.Bundle
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.yupfeg.baselibrary.tools.json.JsonUtils
 import com.yupfeg.logger.ext.logw
 import org.json.JSONArray
 import org.json.JSONException
@@ -18,6 +17,7 @@ import java.lang.reflect.Type
  */
 
 /**获取当前对象的类型*/
+@Suppress("unused")
 inline fun <reified T> genericType(): Type = object: TypeToken<T>() {}.type
 
 @Suppress("unused")

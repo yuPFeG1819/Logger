@@ -5,7 +5,7 @@ plugins {
     id "com.github.dcendents.android-maven"
 }
 //上传的jitpack仓库group
-group = "com.yupfeg.logger"
+group = "com.gitee.yupfeg"
 
 android {
     compileSdkVersion 30

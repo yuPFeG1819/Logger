@@ -1,6 +1,7 @@
-package com.yupfeg.baselibrary.tools.json
+package com.yupfeg.logger.json
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
 
 /**
@@ -9,7 +10,11 @@ import java.lang.reflect.Type
  * @date 2020/01/04
  */
 object JsonUtils {
-    private val gson: Gson by lazy(LazyThreadSafetyMode.SYNCHRONIZED){ Gson() }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    val gson: Gson by lazy(LazyThreadSafetyMode.SYNCHRONIZED){
+        GsonBuilder().setLenient().create()
+    }
 
     /**
      * 将json字符串转换成type类型的对象

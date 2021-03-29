@@ -1,6 +1,6 @@
 package com.yupfeg.logger.handle
 
-import com.yupfeg.baselibrary.tools.json.JsonUtils
+import com.yupfeg.logger.json.JsonUtils
 import com.yupfeg.logger.json.formatJSONString
 import com.yupfeg.logger.Logger
 import com.yupfeg.logger.formatter.Formatter
