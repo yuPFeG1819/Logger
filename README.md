@@ -5,7 +5,9 @@
 
 ### 依赖方式
 
-[![img](https://jitpack.io/v/yuPFeG1819/Logger.svg)](https://jitpack.io/#)
+```
+[![](https://jitpack.io/v/com.gitee.yupfeg/logger.svg)](https://jitpack.io/#com.gitee.yupfeg/logger)
+```
 
 ```groovy
 //root project build.gradle
@@ -16,7 +18,7 @@ allprojects {
 }
 //module build.gradle
 dependencies {
-    implementation 'com.yupfeg.logger:Logger:${lastVersion}'
+    implementation 'com.gitee.yupfeg:logger:v1.0.1'
 }
 ```
 
