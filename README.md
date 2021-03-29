@@ -16,7 +16,7 @@ allprojects {
 }
 //module build.gradle
 dependencies {
-    implementation 'com.gitee.yupfeg:logger:v1.0.1'
+    implementation 'com.gitee.yupfeg:logger:{$lastVersion}'
 }
 ```
 
