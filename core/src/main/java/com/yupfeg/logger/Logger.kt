@@ -1,5 +1,7 @@
 package com.yupfeg.logger
 
+import com.yupfeg.logger.converter.GsonConverter
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.formatter.BorderFormatterImpl
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.StringPrintHandler
@@ -48,6 +50,9 @@ object Logger {
 
     /**当前第一个执行日志内容处理的类*/
     private val mPrintHandlerChain : BasePrintHandler
+
+    /**日志内容json解析器*/
+    var jsonConverter : JsonConverter = GsonConverter()
 
     init {
         mLogPrinters.add(LogcatPrinter())
@@ -356,6 +361,8 @@ object Logger {
         return 0
     }
 
+    /**仅测试用的，打印所有调用栈信息*/
+    @Suppress("unused")
     @TestOnly
     private fun StringBuilder.appendLogStackTrace(formatter: Formatter){
         if (!isDisplayClassInfo) return

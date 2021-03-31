@@ -1,15 +1,15 @@
-package com.yupfeg.logger.json
+package com.yupfeg.logger.converter.json
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
 
 /**
- * json解析的工具类
+ * gson解析工具类
  * @author yuPFeG
  * @date 2020/01/04
  */
-object JsonUtils {
+internal object GsonUtils {
 
     @Suppress("MemberVisibilityCanBePrivate")
     val gson: Gson by lazy(LazyThreadSafetyMode.SYNCHRONIZED){

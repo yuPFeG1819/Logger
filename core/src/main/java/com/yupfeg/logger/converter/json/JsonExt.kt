@@ -1,8 +1,7 @@
-package com.yupfeg.logger.json
+package com.yupfeg.logger.converter.json
 
 import android.os.Bundle
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.yupfeg.logger.Logger
 import com.yupfeg.logger.ext.logw
 import org.json.JSONArray
 import org.json.JSONException
@@ -15,13 +14,6 @@ import java.lang.reflect.Type
  * @author yuPFeG
  * @date 2019/11/10
  */
-
-/**获取当前对象的类型*/
-@Suppress("unused")
-inline fun <reified T> genericType(): Type = object: TypeToken<T>() {}.type
-
-@Suppress("unused")
-inline fun <reified T> Gson.fromJson(json: String): T = fromJson(json, T::class.java)
 
 /**
  * json字符串每层的缩进数
@@ -40,14 +32,15 @@ fun JSONObject.formatJSONString(spaces : Int = JSON_INDENT) : String = this.toSt
  * */
 fun JSONArray.formatJSONString(spaces: Int = JSON_INDENT) : String = this.toString(spaces)
 
+
 /**[String]拓展函数，解析Json字符串转化为List<T>格式*/
 @Suppress("unused")
-inline fun <reified T> String.parseJsonStringToList() : List<T>{
-    return JsonUtils.fromJson(this, ListParameterizedTypeImpl(T::class.java))
+internal inline fun <reified T> String.parseJsonStringToList() : List<T>{
+    return Logger.jsonConverter.fromJson(this, ListParameterizedTypeImpl(T::class.java))
 }
 
 /**GSON使用List泛型解析Type信息*/
-class ListParameterizedTypeImpl(private val clazz: Class<*>) : ParameterizedType {
+internal class ListParameterizedTypeImpl(private val clazz: Class<*>) : ParameterizedType {
     /** List<T>里的List,所以返回值是List.class*/
     override fun getRawType(): Type {
         return List::class.java
@@ -78,7 +71,7 @@ fun isPrimitiveType(value: Any?) = when(value){
  * [Bundle]拓展函数，解析 bundle ，并存储到 JSONObject
  * * 仅用于Logger日志输出使用
  */
-fun Bundle.parseToJSONObject() : JSONObject {
+internal fun Bundle.parseToJSONObject() : JSONObject {
     val bundle = this
     return JSONObject().also { jsonObject ->
         bundle.keySet().forEach {
@@ -89,7 +82,7 @@ fun Bundle.parseToJSONObject() : JSONObject {
                 if (isPrimitiveType) {
                     jsonObject.put(it, bundle.get(it))
                 } else {
-                    jsonObject.put(it, JSONObject(JsonUtils.toJson(this)))
+                    jsonObject.put(it, JSONObject(Logger.jsonConverter.toJson(this)))
                 }
             } catch (e: JSONException) {
                 logw("Invalid Log Bundle content Json")
@@ -102,7 +95,7 @@ fun Bundle.parseToJSONObject() : JSONObject {
  * [Map]的拓展函数，解析 map 为 JSONObject
  * * 仅用于Logger日志输出使用
  */
-fun Map<*, *>.parseToJSONObject(): JSONObject {
+internal fun Map<*, *>.parseToJSONObject(): JSONObject {
     val originMap = this
     return JSONObject().also {jsonObject->
         val firstValue = originMap.values.firstOrNull()
@@ -115,7 +108,7 @@ fun Map<*, *>.parseToJSONObject(): JSONObject {
                 } else {
                     jsonObject.put(
                         item.toString(),
-                        JSONObject(JsonUtils.toJson(originMap[item] ?: "{}"))
+                        JSONObject(Logger.jsonConverter.toJson(originMap[item] ?: "{}"))
                     )
                 }
             } catch (e: JSONException) {
@@ -129,11 +122,11 @@ fun Map<*, *>.parseToJSONObject(): JSONObject {
  * [Collection]拓展函数，解析 collection 转化为 [JSONArray]
  * * 仅用于Logger日志输出使用
  */
-fun Collection<*>.parseToJSONArray(): JSONArray {
+internal fun Collection<*>.parseToJSONArray(): JSONArray {
     return JSONArray().also {jsonArray->
         this.map { item ->
             item ?: return@map
-            val objStr = JsonUtils.toJson(item)
+            val objStr = Logger.jsonConverter.toJson(item)
             objStr.run<String, Unit> {
                 try {
                     jsonArray.put(JSONObject(this))

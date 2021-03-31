@@ -1,7 +1,6 @@
 package com.yupfeg.logger.handle
 
-import com.yupfeg.logger.json.JsonUtils
-import com.yupfeg.logger.json.formatJSONString
+import com.yupfeg.logger.converter.json.formatJSONString
 import com.yupfeg.logger.Logger
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.PrintHandlerConfig
@@ -29,7 +28,7 @@ class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
     }
 
     override fun parse2String(content: Any, formatter: Formatter): String {
-        return JsonUtils.toJson(content).run { JSONObject(this) }
+        return Logger.jsonConverter.toJson(content).run { JSONObject(this) }
             .formatJSONString()
             .replace("\n", "\n${formatter.leftSplitter()}")
     }
