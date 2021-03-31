@@ -66,6 +66,16 @@ setDslLoggerConfig {
 
 
 
+### JSON解析
+
+`Converter`层，隔离具体json解析实现
+
+内置默认为`GsonConverter`解析json。
+
+外部可实现`JsonConverter`接口创建自定义json解析策略，然后调用`Logger.jsonConverter`设置对日志内容的解析策略
+
+
+
 ### 类型处理
 
 目前内置了`Bundle`、`Collection`、`Intent`、`Map`、`String`、`Throwable`、`Object`的日志内容类型处理器，将对应类型转化为字符串日志输出，通常已足够
@@ -93,3 +103,4 @@ setDslLoggerConfig {
 > - 或者直接通过`Logger.addPrintHandler`函数添加。
 
 每输出日志内容，都会将所有的日志输出类遍历一遍，**可使用的输出类都会执行输出操作**。
+
