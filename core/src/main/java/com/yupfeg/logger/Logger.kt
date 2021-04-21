@@ -330,7 +330,7 @@ object Logger {
         if (!isDisplayClassInfo) return
 
         val sElements = Thread.currentThread().stackTrace
-        val stackOffset = getStackOffset(sElements)
+        val stackOffset = sElements.calculateStackOffset()
         append(formatter.leftSplitter())
         append(sElements[stackOffset].className)
             .append(".")
@@ -344,13 +344,15 @@ object Logger {
             .append(formatter.middle())
     }
 
-    private fun getStackOffset(trace: Array<StackTraceElement>): Int {
+    /**
+     * [StackTraceElement]数组的拓展函数，计算调用栈的调用层次
+     * */
+    private fun Array<StackTraceElement>.calculateStackOffset(): Int {
         var i = MIN_STACK_OFFSET
-        while (i < trace.size) {
-            val name = trace[i].className
+        while (i < this.size) {
+            val name = this[i].className
             takeIf {
                 !name.contains("LoggerExtKt")
-                        && name != Logger::class.java.name
                         && name != BaseLogPrinter::class.java.name
             }?.also {
                 return i
