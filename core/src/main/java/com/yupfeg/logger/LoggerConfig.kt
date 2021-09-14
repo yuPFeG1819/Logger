@@ -9,7 +9,6 @@ import com.yupfeg.logger.printer.BaseLogPrinter
  * @date 2020/12/31
  */
 class LoggerConfig {
-    var isDebug : Boolean = true
     /**日志额外信息*/
     var logHeaders : List<String>? = null
     /**日志输出的tag*/

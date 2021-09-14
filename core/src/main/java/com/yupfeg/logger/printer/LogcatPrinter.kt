@@ -1,7 +1,6 @@
 package com.yupfeg.logger.printer
 
 import android.util.Log
-import com.yupfeg.logger.Logger
 import com.yupfeg.logger.LoggerLevel
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.formatter.SimpleFormatterImpl
@@ -11,9 +10,11 @@ import com.yupfeg.logger.formatter.SimpleFormatterImpl
  * @author yuPFeG
  * @date 2020/12/31
  */
-class LogcatPrinter(
+@Suppress("unused")
+open class LogcatPrinter(
     /**格式化日志输出格式*/
-    formatter : Formatter = SimpleFormatterImpl
+    formatter : Formatter = SimpleFormatterImpl,
+    private val enable : Boolean = true
 ) : BaseLogPrinter(formatter){
 
     companion object {
@@ -25,7 +26,7 @@ class LogcatPrinter(
     }
 
     override val isEnable: Boolean
-        get() = Logger.isDebug
+        get() = enable
 
     override fun performPrintLog(logLevel: LoggerLevel, tag: String, msg: String) {
         //输出到Logcat上的日志内容，需要在换行符前添加内容才能使换行符生效
@@ -39,24 +40,24 @@ class LogcatPrinter(
      * @param tag 日志tag
      * @param content 日志内容
      */
-    private fun preparePrintLongLog(logLevel: LoggerLevel, tag: String, content: String) {
+    protected open fun preparePrintLongLog(logLevel: LoggerLevel, tag: String, content: String) {
         val logLength = content.length
         if (logLength <= MAX_STRING_LENGTH){
             printToLogcat(logLevel, tag, content)
             return
         }
 
-        var i = 0
-        while (i < logLength) {
-            if (i + MAX_STRING_LENGTH < content.length) {
-                if (i==0) {
-                    printToLogcat(logLevel, tag, content.substring(i, i + MAX_STRING_LENGTH))
+        var length = 0
+        while (length < logLength) {
+            if (length + MAX_STRING_LENGTH < content.length) {
+                if (length==0) {
+                    printToLogcat(logLevel, tag, content.substring(length, length + MAX_STRING_LENGTH))
                 } else {
-                    printToLogcat(logLevel, "", content.substring(i, i + MAX_STRING_LENGTH))
+                    printToLogcat(logLevel, "", content.substring(length, length + MAX_STRING_LENGTH))
                 }
             } else
-                printToLogcat(logLevel, "", content.substring(i, content.length))
-            i += MAX_STRING_LENGTH
+                printToLogcat(logLevel, "", content.substring(length, content.length))
+            length += MAX_STRING_LENGTH
         }
 
     }
@@ -67,7 +68,7 @@ class LogcatPrinter(
      * @param tag 日志tag
      * @param content 日志内容
      */
-    private fun printToLogcat(logLevel: LoggerLevel, tag: String, content: String){
+    protected open fun printToLogcat(logLevel: LoggerLevel, tag: String, content: String){
         when(logLevel) {
             LoggerLevel.ERROR -> Log.e(tag, content)
             LoggerLevel.WARN  -> Log.w(tag, content)

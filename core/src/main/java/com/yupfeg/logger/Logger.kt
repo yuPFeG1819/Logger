@@ -27,10 +27,6 @@ object Logger {
     /**全局默认的日志tag*/
     private var mGlobalLogTag = "Logger"
 
-    /**是否为debug状态*/
-    var isDebug : Boolean = true
-        private set
-
     /**日志额外信息*/
     private var mLogHeaders : MutableList<String> ?= null
 
@@ -55,8 +51,6 @@ object Logger {
     var jsonConverter : JsonConverter = GsonConverter()
 
     init {
-        mLogPrinters.add(LogcatPrinter())
-
         mHandlers.run {
             add(StringPrintHandler())
             add(ThrowablePrintHandler())
@@ -130,17 +124,6 @@ object Logger {
     @JvmStatic
     fun setGlobalLogTag(tag : String) : Logger {
         mGlobalLogTag = tag
-        return this
-    }
-
-    /**
-     * 是否是debug，输出到日志
-     * @param isDebug
-     * @return [Logger]类本身，便于链式调用
-     * */
-    @JvmStatic
-    fun setDebug(isDebug : Boolean) : Logger {
-        Logger.isDebug = isDebug
         return this
     }
 

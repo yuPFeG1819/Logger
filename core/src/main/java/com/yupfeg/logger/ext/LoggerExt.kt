@@ -29,7 +29,6 @@ fun setDslLoggerConfig(init : LoggerConfig.()->Unit) : Logger {
  * */
 private fun performConfigLogger(config: LoggerConfig) : Logger {
     return Logger.addLogHeaders(if(config.logHeaders.isNullOrEmpty()) null else config.logHeaders)
-        .setDebug(config.isDebug)
         .setGlobalLogTag(config.tag)
         .setDisplayClassInfo(config.isDisplayClassInfo)
         .setDisplayThreadInfo(config.isDisplayThreadInfo)
