@@ -3,6 +3,7 @@ package com.yupfeg.sample
 import android.app.Application
 import com.yupfeg.logger.BuildConfig
 import com.yupfeg.logger.ext.setDslLoggerConfig
+import com.yupfeg.logger.printer.LogcatPrinter
 
 /**
  *
@@ -14,11 +15,11 @@ class MyApplication : Application(){
         super.onCreate()
         //初始化日志管理器
         setDslLoggerConfig {
-            isDebug = BuildConfig.DEBUG
             isDisplayClassInfo = true
             logHeaders = listOf(
                 "test log headers","second log header"
             )
+            logPrinters = listOf(LogcatPrinter())
         }
     }
 }

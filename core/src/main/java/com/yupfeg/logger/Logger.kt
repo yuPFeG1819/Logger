@@ -8,7 +8,6 @@ import com.yupfeg.logger.handle.StringPrintHandler
 import com.yupfeg.logger.handle.ThrowablePrintHandler
 import com.yupfeg.logger.handle.config.PrintHandlerConfig
 import com.yupfeg.logger.printer.BaseLogPrinter
-import com.yupfeg.logger.printer.LogcatPrinter
 import com.yupfeg.logger.handle.*
 import com.yupfeg.logger.handle.BundlePrintHandler
 import org.jetbrains.annotations.TestOnly
