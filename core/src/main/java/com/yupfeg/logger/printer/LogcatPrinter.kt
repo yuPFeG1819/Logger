@@ -2,7 +2,6 @@ package com.yupfeg.logger.printer
 
 import android.util.Log
 import com.yupfeg.logger.LoggerLevel
-import com.yupfeg.logger.formatter.BorderFormatterImpl
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.formatter.SimpleFormatterImpl
 
@@ -14,7 +13,7 @@ import com.yupfeg.logger.formatter.SimpleFormatterImpl
 @Suppress("unused")
 open class LogcatPrinter(
     /**格式化日志输出格式*/
-    formatter : Formatter = BorderFormatterImpl,
+    formatter : Formatter = SimpleFormatterImpl,
     private val enable : Boolean = true
 ) : BaseLogPrinter(formatter){
 
