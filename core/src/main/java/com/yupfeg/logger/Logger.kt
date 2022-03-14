@@ -45,6 +45,8 @@ object Logger {
     /**日志内容json解析器*/
     private var mJsonConverter : JsonConverter = GsonConverter()
 
+    private val mLastObjectHandler = ObjectPrintHandler()
+
     init {
         //添加内置的日志输出类型处理器
         mHandlers.apply {
@@ -54,7 +56,7 @@ object Logger {
             add(IntentPrintHandler())
             add(MapPrintHandler())
             add(CollectionPrintHandler())
-            add(ObjectPrintHandler())
+            add(mLastObjectHandler)
         }
         //将所有类型处理器串联成单链表结构
         for (i in 0 until mHandlers.size) {
@@ -224,8 +226,16 @@ object Logger {
      */
     @Suppress("unused")
     @JvmStatic
-    fun addPrintHandler(handler : BasePrintHandler, index : Int = mHandlers.size) : Logger {
-        mHandlers.add(index, handler)
+    fun addPrintHandler(handler : BasePrintHandler, index : Int = 0) : Logger {
+        if (index == mHandlers.size-1){
+            //如果添加到最后，则先移除兜底的处理类，避免新处理类不能正常工作
+            mHandlers.remove(mLastObjectHandler)
+            mHandlers.add(handler)
+            mHandlers.add(mLastObjectHandler)
+        }else{
+            mHandlers.add(index, handler)
+        }
+        //重置责任链的结构
         val len = mHandlers.size
         for (i in 0 until len){
             if (i == 0) continue
@@ -236,14 +246,13 @@ object Logger {
     }
 
     /**
-     * 自定义 PrintHandler 来解析日志内容，并指定 Handler 在责任链中的位置
+     * 添加自定义 PrintHandler 来解析日志内容类型的集合，只能添加到原有处理器的前面，最先尝试处理日志内容
      * @param list 拓展的[BasePrintHandler]解析处理日志内容的list，并将处理后的内容输出
-     * @param index [list]在责任链数组中的位置
      */
     @JvmStatic
-    fun addPrintHandlerList(list : List<BasePrintHandler>?, index : Int = mHandlers.size) : Logger {
+    fun addPrintHandlerList(list : List<BasePrintHandler>?) : Logger {
         list?:return this
-        mHandlers.addAll(index,list)
+        mHandlers.addAll(0,list)
         val len = mHandlers.size
         for (i in 0 until len){
             if (i == 0) continue
