@@ -34,6 +34,7 @@ private fun performConfigLogger(config: LoggerConfig) : Logger {
         .setDisplayThreadInfo(config.isDisplayThreadInfo)
         .addPrintHandlerList(list = config.printHandlers)
         .addLogPrinters(list = config.logPrinters)
+        .setJsonConverter(config.jsonConverter)
 }
 /**
  * 输出verbose等级的日志

@@ -1,5 +1,6 @@
 package com.yupfeg.logger
 
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.handle.BasePrintHandler
 import com.yupfeg.logger.printer.BaseLogPrinter
 
@@ -26,4 +27,9 @@ class LoggerConfig {
      * 日志输出目标的集合
      * */
     var logPrinters : List<BaseLogPrinter> ?= null
+
+    /**
+     * 对象json格式化解析类，默认使用Gson
+     * */
+    var jsonConverter : JsonConverter? = null
 }
