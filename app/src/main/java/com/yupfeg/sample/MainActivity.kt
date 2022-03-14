@@ -2,7 +2,9 @@ package com.yupfeg.sample
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
 import com.yupfeg.logger.ext.logd
+import com.yupfeg.logger.ext.logi
 import com.yupfeg.logger.ext.logw
 import java.lang.NullPointerException
 
@@ -13,6 +15,8 @@ import java.lang.NullPointerException
  */
 class MainActivity : AppCompatActivity(){
 
+    private data class TestMan(val name : String,val age : Int = 0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
@@ -21,6 +25,20 @@ class MainActivity : AppCompatActivity(){
             logw(e)
         }
         logd("${this.javaClass.name} onCreate")
+        logd(List(22){
+            TestMan("name ${it * 2}", age = it + 1)
+        })
+        logd(List(30){
+            it * 3
+        })
+
+        logd(mutableMapOf("11" to 22,"22" to 33,"33" to 121))
+
+        intent?.also {
+            logi(it)
+        }
+
+        logd(bundleOf("test" to "newTest"))
     }
 
     override fun onStart() {
