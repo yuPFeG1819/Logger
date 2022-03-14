@@ -40,12 +40,10 @@ object Logger {
     private val mHandlers = mutableListOf<BasePrintHandler>()
 
     /**当前第一个执行日志内容处理的类*/
-    private val mPrintHandlerChain : BasePrintHandler
+    private var mPrintHandlerChain : BasePrintHandler
 
     /**日志内容json解析器*/
     private var mJsonConverter : JsonConverter = GsonConverter()
-
-    private val mLastObjectHandler = ObjectPrintHandler()
 
     init {
         //添加内置的日志输出类型处理器
@@ -56,7 +54,7 @@ object Logger {
             add(IntentPrintHandler())
             add(MapPrintHandler())
             add(CollectionPrintHandler())
-            add(mLastObjectHandler)
+            add(ObjectPrintHandler())
         }
         //将所有类型处理器串联成单链表结构
         for (i in 0 until mHandlers.size) {
@@ -220,28 +218,20 @@ object Logger {
     }
 
     /**
-     * 自定义 PrintHandler 来解析日志内容，并指定 Handler 在责任链中的位置
+     * 添加自定义 PrintHandler 来解析日志内容到责任链的头节点，优先执行
      * @param handler 拓展的[BasePrintHandler]解析处理日志内容，并输出日志
-     * @param index [handler]在责任链数组中的位置
      */
     @Suppress("unused")
     @JvmStatic
-    fun addPrintHandler(handler : BasePrintHandler, index : Int = 0) : Logger {
-        if (index == mHandlers.size-1){
-            //如果添加到最后，则先移除兜底的处理类，避免新处理类不能正常工作
-            mHandlers.remove(mLastObjectHandler)
-            mHandlers.add(handler)
-            mHandlers.add(mLastObjectHandler)
-        }else{
-            mHandlers.add(index, handler)
-        }
+    fun addPrintHandler(handler : BasePrintHandler) : Logger {
+        mHandlers.add(0, handler)
         //重置责任链的结构
         val len = mHandlers.size
         for (i in 0 until len){
             if (i == 0) continue
             mHandlers[i - 1].setNextChain(mHandlers[i])
         }
-
+        mPrintHandlerChain = mHandlers[0]
         return this
     }
 
@@ -253,11 +243,13 @@ object Logger {
     fun addPrintHandlerList(list : List<BasePrintHandler>?) : Logger {
         list?:return this
         mHandlers.addAll(0,list)
+        //重置责任链的结构
         val len = mHandlers.size
         for (i in 0 until len){
             if (i == 0) continue
             mHandlers[i - 1].setNextChain(mHandlers[i])
         }
+        mPrintHandlerChain = mHandlers[0]
         return this
     }
 
