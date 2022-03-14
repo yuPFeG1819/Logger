@@ -15,7 +15,7 @@ import org.json.JSONObject
  * @author yuPFeG
  * @date 2021/01/04
  */
-class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
+internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
 
     override fun isHandleContent(request: LogPrintRequest): Boolean {
         //不属于Intent类型不予处理，转为下一个handler进行处理
@@ -38,7 +38,7 @@ class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
         fun parseBundleString(extras: Bundle)
             = extras.parseToJSONObject(jsonConverter).formatJSONString()
 
-        val header = "${content.javaClass}${Formatter.BR}${formatter.leftSplitter()}"
+        val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
         return header + JSONObject().apply {
             put("Scheme", content.scheme)
             put("Action", content.action)
@@ -52,7 +52,7 @@ class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
             }
         }
             .formatJSONString()
-            .replace("\n", "\n${formatter.leftSplitter()}")
+            .replace("\n", "\n${formatter.left}")
     }
 
 

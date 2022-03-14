@@ -13,7 +13,7 @@ import com.yupfeg.logger.handle.parse.Parsable
  * @author yuPFeG
  * @date 2021/01/22
  */
-class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<*>> {
+internal class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<*>> {
 
     private val mListHeaderFormat by lazy(LazyThreadSafetyMode.SYNCHRONIZED){
         "%s size = %d${Formatter.BR}"
@@ -31,7 +31,7 @@ class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<*>> {
         val logFormatContent = getFormatLogContentWrapper(logFormatter,request)
         return if (isPrimitiveType){
             String.format(
-                logFormatContent, "${extraContent}${logFormatter.leftSplitter()}${collect}"
+                logFormatContent, "${extraContent}${logFormatter.left}${collect}"
             )
         }else{
             val parseContent = parse2String(
@@ -49,6 +49,6 @@ class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<*>> {
         return content
             .parseToJSONArray(jsonConverter)
             .formatJSONString()
-            .replace("\n", "\n${formatter.leftSplitter()}")
+            .replace("\n", "\n${formatter.left}")
     }
 }

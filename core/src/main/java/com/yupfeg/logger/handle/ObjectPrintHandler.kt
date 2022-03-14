@@ -13,7 +13,7 @@ import org.json.JSONObject
  * @author yuPFeG
  * @date 2021/01/22
  */
-class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
+internal class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
     override fun isHandleContent(request: LogPrintRequest): Boolean {
         return true
     }
@@ -21,7 +21,7 @@ class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
     override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
         val logFormat = getFormatLogContentWrapper(logFormatter,request)
         val originContent = request.logContent
-        val logContent = "${originContent.javaClass}${Formatter.BR}${logFormatter.leftSplitter()} " +
+        val logContent = "${originContent.javaClass}${Formatter.BR}${logFormatter.left} " +
                 parse2String(originContent,logFormatter,request.jsonConverter)
         return String.format(logFormat,logContent)
     }
@@ -33,6 +33,6 @@ class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
     ): String {
         return jsonConverter.toJson(content).run { JSONObject(this) }
             .formatJSONString()
-            .replace("\n", "\n${formatter.leftSplitter()}")
+            .replace("\n", "\n${formatter.left}")
     }
 }

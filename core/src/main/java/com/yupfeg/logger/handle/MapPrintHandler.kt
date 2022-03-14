@@ -12,7 +12,7 @@ import com.yupfeg.logger.handle.parse.Parsable
  * @author yuPFeG
  * @date 2021/01/22
  */
-class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
+internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
     override fun isHandleContent(request: LogPrintRequest): Boolean {
         //不属于map类型不予处理，转为下一个handler进行处理
         return request.logContent is Map<*,*>
@@ -31,11 +31,11 @@ class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
         formatter: Formatter,
         jsonConverter: JsonConverter
     ): String {
-        val header = "${content.javaClass}${Formatter.BR}${formatter.leftSplitter()}"
+        val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
         val logContent = content
             .parseToJSONObject(jsonConverter)
             .formatJSONString()
-            .replace("\n", "\n${formatter.leftSplitter()}")
+            .replace("\n", "\n${formatter.left}")
         return "$header$logContent"
     }
 }

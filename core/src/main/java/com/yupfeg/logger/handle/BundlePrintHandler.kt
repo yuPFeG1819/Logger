@@ -32,11 +32,11 @@ internal class BundlePrintHandler : BasePrintHandler(), Parsable<Bundle> {
         formatter: Formatter,
         jsonConverter: JsonConverter
     ): String {
-        val header = "${content.javaClass}${Formatter.BR}${formatter.leftSplitter()}"
+        val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
         val logContent = content
             .parseToJSONObject(jsonConverter)
             .formatJSONString()
-            .replace("\n", "\n${formatter.leftSplitter()}")
+            .replace("\n", "\n${formatter.left}")
         return "$header$logContent"
     }
 

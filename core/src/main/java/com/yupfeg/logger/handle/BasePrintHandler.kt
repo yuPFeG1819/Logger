@@ -171,7 +171,7 @@ abstract class BasePrintHandler {
         handleConfig: LogPrintRequest
     ): String {
         return StringBuilder().apply {
-            append(formatter.top())
+            append(formatter.top)
             //顶部额外信息
             appendLogHeaderContent(formatter,handleConfig.logHeaders)
             if (handleConfig.isPrintThreadInfo){
@@ -183,11 +183,11 @@ abstract class BasePrintHandler {
                 appendLogInvokeStack(formatter)
             }
 
-            append(formatter.leftSplitter())
-            //实际日志内容
+            append(formatter.left)
+            //实际日志内容，通过String.format进行替换
             append("%s")
             //日志框底部格式
-            append(formatter.bottom())
+            append(formatter.bottom)
         }.toString()
     }
 
@@ -202,11 +202,11 @@ abstract class BasePrintHandler {
     ){
         logHeaders?.takeIf { it.isNotEmpty() }
             ?.map {header->
-                append(formatter.leftSplitter())
+                append(formatter.left)
                 append("$header \n")
             }?.also {
                 deleteCharAt(this.lastIndex)
-                append(formatter.middle())
+                append(formatter.middle)
             }
     }
 
@@ -218,9 +218,9 @@ abstract class BasePrintHandler {
         formatter: Formatter,
     ){
         //显示当前线程名
-        append(formatter.leftSplitter())
+        append(formatter.left)
         append("Thread : ${Thread.currentThread().name}")
-        append(formatter.middle())
+        append(formatter.middle)
     }
 
     /**
@@ -231,7 +231,7 @@ abstract class BasePrintHandler {
     private fun StringBuilder.appendLogInvokeStack(formatter: Formatter){
         val sElements = Thread.currentThread().stackTrace
         val stackOffset = sElements.calculateStackOffset()
-        append(formatter.leftSplitter())
+        append(formatter.left)
         append(sElements[stackOffset].className)
             .append(".")
             .append(sElements[stackOffset].methodName)
@@ -241,7 +241,7 @@ abstract class BasePrintHandler {
             .append(": line :")
             .append(sElements[stackOffset].lineNumber)
             .append(")")
-            .append(formatter.middle())
+            .append(formatter.middle)
     }
 
     /**
@@ -274,7 +274,7 @@ abstract class BasePrintHandler {
     private fun StringBuilder.appendLogStackTrace(formatter: Formatter){
         val sElements = Thread.currentThread().stackTrace
         for (sElement in sElements) {
-            append(formatter.leftSplitter())
+            append(formatter.left)
             append(sElement.className)
             append(".")
             append(sElement.methodName)
@@ -286,7 +286,7 @@ abstract class BasePrintHandler {
             append(")")
             append("\n")
         }
-        append(formatter.middle())
+        append(formatter.middle)
     }
     // </editor-fold>
 }

@@ -49,19 +49,19 @@ internal class StringPrintHandler : BasePrintHandler(), Parsable<String> {
                 content.startsWith("{") -> {
                     val jsonObject = JSONObject(content)
                     message = jsonObject.formatJSONString().run {
-                        replace("\n", "\n${formatter.leftSplitter()}")
+                        replace("\n", "\n${formatter.left}")
                     }
                 }
                 //json数组
                 content.startsWith("[") -> {
                     val jsonArray = JSONArray(content)
                     message = jsonArray.formatJSONString().run {
-                        replace("\n", "\n${formatter.leftSplitter()}")
+                        replace("\n", "\n${formatter.left}")
                     }
                 }
                 else -> {
                     // 普通的字符串
-                    message = content.replace("\n", "\n${formatter.leftSplitter()}")
+                    message = content.replace("\n", "\n${formatter.left}")
                 }
             }
         } catch (e: JSONException) {

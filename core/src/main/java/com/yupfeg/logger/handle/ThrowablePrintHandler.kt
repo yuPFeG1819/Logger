@@ -39,6 +39,6 @@ internal class ThrowablePrintHandler : BasePrintHandler(), Parsable<Throwable> {
         val pw = PrintWriter(sw, false)
         content.printStackTrace(pw)
         pw.flush()
-        return sw.toString().replace("\n", "\n${formatter.leftSplitter()}")
+        return sw.toString().replace("\n", "\n${formatter.left}")
     }
 }
