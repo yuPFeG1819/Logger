@@ -1,9 +1,9 @@
 package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.converter.json.formatJSONString
-import com.yupfeg.logger.Logger
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.PrintHandlerConfig
+import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import org.json.JSONObject
 
@@ -14,21 +14,24 @@ import org.json.JSONObject
  * @date 2021/01/22
  */
 class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
-    override fun handleContent(content: Any, handleConfig: PrintHandlerConfig): Boolean {
-        handleConfig.printers.forEach {printer->
-            var logContent = "${content.javaClass}${Formatter.BR}${printer.logFormatter.leftSplitter()}"
-            logContent += parse2String(content,printer.logFormatter)
-            val logFormat = Logger.getFormatLogContent(printer.logFormatter)
-            printer.printLog(
-                handleConfig.logLevel,handleConfig.tag,
-                String.format(logFormat,logContent)
-            )
-        }
+    override fun isHandleContent(request: LogPrintRequest): Boolean {
         return true
     }
 
-    override fun parse2String(content: Any, formatter: Formatter): String {
-        return Logger.jsonConverter.toJson(content).run { JSONObject(this) }
+    override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
+        val logFormat = getFormatLogContentWrapper(logFormatter,request)
+        val originContent = request.logContent
+        val logContent = "${originContent.javaClass}${Formatter.BR}${logFormatter.leftSplitter()} " +
+                parse2String(originContent,logFormatter,request.jsonConverter)
+        return String.format(logFormat,logContent)
+    }
+
+    override fun parse2String(
+        content: Any,
+        formatter: Formatter,
+        jsonConverter: JsonConverter
+    ): String {
+        return jsonConverter.toJson(content).run { JSONObject(this) }
             .formatJSONString()
             .replace("\n", "\n${formatter.leftSplitter()}")
     }

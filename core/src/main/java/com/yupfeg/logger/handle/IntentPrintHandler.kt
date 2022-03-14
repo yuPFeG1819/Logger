@@ -2,11 +2,11 @@ package com.yupfeg.logger.handle
 
 import android.content.Intent
 import android.os.Bundle
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.json.formatJSONString
-import com.yupfeg.logger.Logger
 import com.yupfeg.logger.converter.json.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.PrintHandlerConfig
+import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import org.json.JSONObject
 
@@ -17,22 +17,26 @@ import org.json.JSONObject
  */
 class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
 
-    override fun handleContent(content: Any, handleConfig: PrintHandlerConfig): Boolean {
+    override fun isHandleContent(request: LogPrintRequest): Boolean {
         //不属于Intent类型不予处理，转为下一个handler进行处理
-        if (content !is Intent) return false
-        handleConfig.printers.map { printer->
-            val s = Logger.getFormatLogContent(printer.logFormatter)
-            printer.printLog(handleConfig.logLevel,handleConfig.tag,
-                String.format(s, parse2String(content,printer.logFormatter))
-            )
-        }
-        return true
+        return request.logContent is Intent
     }
 
-    override fun parse2String(content: Intent, formatter: Formatter): String {
+    override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
+        val format = getFormatLogContentWrapper(logFormatter,request)
+        return String.format(
+            format, parse2String(request.logContent as Intent,logFormatter,request.jsonConverter)
+        )
+    }
+
+    override fun parse2String(
+        content: Intent,
+        formatter: Formatter,
+        jsonConverter: JsonConverter
+    ): String {
         //内部函数
         fun parseBundleString(extras: Bundle)
-            = extras.parseToJSONObject().formatJSONString()
+            = extras.parseToJSONObject(jsonConverter).formatJSONString()
 
         val header = "${content.javaClass}${Formatter.BR}${formatter.leftSplitter()}"
         return header + JSONObject().apply {

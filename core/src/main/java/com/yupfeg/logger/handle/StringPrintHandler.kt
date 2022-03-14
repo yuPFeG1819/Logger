@@ -1,14 +1,13 @@
 package com.yupfeg.logger.handle
 
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.json.formatJSONString
-import com.yupfeg.logger.Logger
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.PrintHandlerConfig
+import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.StringBuilder
 
 /**
  * [String]类型的日志输出处理类
@@ -17,26 +16,32 @@ import java.lang.StringBuilder
  */
 internal class StringPrintHandler : BasePrintHandler(), Parsable<String> {
 
-    override fun handleContent(content: Any, handleConfig: PrintHandlerConfig): Boolean {
-        val logMsg : String = if (content is StringBuilder || content is StringBuffer){
+    override fun isHandleContent(request: LogPrintRequest): Boolean {
+        return trimLogContent(request.logContent).isNotEmpty()
+    }
+
+    override fun formatLogContent(logFormatter: Formatter, request: LogPrintRequest): String {
+        val logContentFormat = getFormatLogContentWrapper(logFormatter,request)
+        val trimLog = trimLogContent(request.logContent)
+        val parseContent = parse2String(trimLog,logFormatter,request.jsonConverter)
+        return String.format(logContentFormat, parseContent)
+    }
+
+    private fun trimLogContent(content: Any) : String{
+        return if (content is StringBuilder || content is StringBuffer){
             content.toString().trim { it <= ' ' }
         }else if (content is String) {
             content.trim { it <= ' ' }
         }else{
             ""
         }
-        if (logMsg.isEmpty()) return false
-
-        //遍历所有输出类，输出对应到指定渠道
-        handleConfig.printers.forEach { printer ->
-            val extraHeader = Logger.getFormatLogContent(printer.logFormatter)
-            val logContent = String.format(extraHeader,parse2String(logMsg,printer.logFormatter))
-            printer.printLog(handleConfig.logLevel,handleConfig.tag,logContent)
-        }
-        return true
     }
 
-    override fun parse2String(content: String, formatter: Formatter) : String{
+    override fun parse2String(
+        content: String,
+        formatter: Formatter,
+        jsonConverter: JsonConverter
+    ) : String{
         var message : String
         try {
             when {

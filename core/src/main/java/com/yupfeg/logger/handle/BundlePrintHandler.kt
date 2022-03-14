@@ -1,12 +1,12 @@
 package com.yupfeg.logger.handle
 
 import android.os.Bundle
-import com.yupfeg.logger.Logger
-import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.PrintHandlerConfig
-import com.yupfeg.logger.handle.parse.Parsable
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.json.formatJSONString
 import com.yupfeg.logger.converter.json.parseToJSONObject
+import com.yupfeg.logger.formatter.Formatter
+import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.handle.parse.Parsable
 
 /**
  * [Bundle]类型的日志输出处理类
@@ -15,24 +15,26 @@ import com.yupfeg.logger.converter.json.parseToJSONObject
  */
 internal class BundlePrintHandler : BasePrintHandler(), Parsable<Bundle> {
 
-    override fun handleContent(content: Any, handleConfig: PrintHandlerConfig): Boolean {
-        if (content is Bundle){
-            handleConfig.printers.map { printer->
-                val logContentFormat = Logger.getFormatLogContent(printer.logFormatter)
-                printer.printLog(
-                    handleConfig.logLevel, handleConfig.tag,
-                    String.format(logContentFormat, parse2String(content,printer.logFormatter))
-                )
-            }
-            return true
-        }
-        return false
+    override fun isHandleContent(request : LogPrintRequest): Boolean {
+        return request.logContent is Bundle
     }
 
-    override fun parse2String(content: Bundle, formatter: Formatter): String {
+    override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
+        val logContentFormat = getFormatLogContentWrapper(logFormatter,request)
+        val logContent = parse2String(
+            request.logContent as Bundle,logFormatter,request.jsonConverter
+        )
+        return String.format(logContentFormat,logContent)
+    }
+
+    override fun parse2String(
+        content: Bundle,
+        formatter: Formatter,
+        jsonConverter: JsonConverter
+    ): String {
         val header = "${content.javaClass}${Formatter.BR}${formatter.leftSplitter()}"
         val logContent = content
-            .parseToJSONObject()
+            .parseToJSONObject(jsonConverter)
             .formatJSONString()
             .replace("\n", "\n${formatter.leftSplitter()}")
         return "$header$logContent"
