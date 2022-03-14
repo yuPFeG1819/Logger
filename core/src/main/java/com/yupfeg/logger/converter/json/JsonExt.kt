@@ -1,19 +1,13 @@
 package com.yupfeg.logger.converter.json
 
 import android.os.Bundle
-import com.yupfeg.logger.Logger
+import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.ext.logw
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-
-/**
- * json的扩展函数
- * @author yuPFeG
- * @date 2019/11/10
- */
 
 /**
  * json字符串每层的缩进数
@@ -33,10 +27,25 @@ fun JSONObject.formatJSONString(spaces : Int = JSON_INDENT) : String = this.toSt
 fun JSONArray.formatJSONString(spaces: Int = JSON_INDENT) : String = this.toString(spaces)
 
 
-/**[String]拓展函数，解析Json字符串转化为List<T>格式*/
+/**
+ * 判断 [value] 是否为基本类型
+ */
+fun isPrimitiveType(value: Any?) = when(value){
+    is Boolean -> true
+    is String  -> true
+    is Int     -> true
+    is Float   -> true
+    is Double  -> true
+    else       -> false
+}
+
+/**
+ * [String]拓展函数，解析Json字符串转化为List<T>格式
+ * @param jsonConverter json字符串的解析类
+ * */
 @Suppress("unused")
-internal inline fun <reified T> String.parseJsonStringToList() : List<T>{
-    return Logger.jsonConverter.fromJson(this, ListParameterizedTypeImpl(T::class.java))
+internal inline fun <reified T> String.parseJsonStringToList(jsonConverter: JsonConverter) : List<T>{
+    return jsonConverter.fromJson(this, ListParameterizedTypeImpl(T::class.java))
 }
 
 /**GSON使用List泛型解析Type信息*/
@@ -56,22 +65,11 @@ internal class ListParameterizedTypeImpl(private val clazz: Class<*>) : Paramete
 }
 
 /**
- * 判断 [value] 是否为基本类型
- */
-fun isPrimitiveType(value: Any?) = when(value){
-    is Boolean -> true
-    is String  -> true
-    is Int     -> true
-    is Float   -> true
-    is Double  -> true
-    else       -> false
-}
-
-/**
  * [Bundle]拓展函数，解析 bundle ，并存储到 JSONObject
  * * 仅用于Logger日志输出使用
+ * @param jsonConverter json解析类
  */
-internal fun Bundle.parseToJSONObject() : JSONObject {
+internal fun Bundle.parseToJSONObject(jsonConverter: JsonConverter) : JSONObject {
     val bundle = this
     return JSONObject().also { jsonObject ->
         bundle.keySet().forEach {
@@ -82,7 +80,7 @@ internal fun Bundle.parseToJSONObject() : JSONObject {
                 if (isPrimitiveType) {
                     jsonObject.put(it, bundle.get(it))
                 } else {
-                    jsonObject.put(it, JSONObject(Logger.jsonConverter.toJson(this)))
+                    jsonObject.put(it, JSONObject(jsonConverter.toJson(this)))
                 }
             } catch (e: JSONException) {
                 logw("Invalid Log Bundle content Json")
@@ -94,8 +92,9 @@ internal fun Bundle.parseToJSONObject() : JSONObject {
 /**
  * [Map]的拓展函数，解析 map 为 JSONObject
  * * 仅用于Logger日志输出使用
+ * @param jsonConverter json解析类
  */
-internal fun Map<*, *>.parseToJSONObject(): JSONObject {
+internal fun Map<*, *>.parseToJSONObject(jsonConverter: JsonConverter): JSONObject {
     val originMap = this
     return JSONObject().also {jsonObject->
         val firstValue = originMap.values.firstOrNull()
@@ -108,7 +107,7 @@ internal fun Map<*, *>.parseToJSONObject(): JSONObject {
                 } else {
                     jsonObject.put(
                         item.toString(),
-                        JSONObject(Logger.jsonConverter.toJson(originMap[item] ?: "{}"))
+                        JSONObject(jsonConverter.toJson(originMap[item] ?: "{}"))
                     )
                 }
             } catch (e: JSONException) {
@@ -121,12 +120,13 @@ internal fun Map<*, *>.parseToJSONObject(): JSONObject {
 /**
  * [Collection]拓展函数，解析 collection 转化为 [JSONArray]
  * * 仅用于Logger日志输出使用
+ * @param jsonConverter 日志解析类
  */
-internal fun Collection<*>.parseToJSONArray(): JSONArray {
+internal fun Collection<*>.parseToJSONArray(jsonConverter: JsonConverter): JSONArray {
     return JSONArray().also {jsonArray->
         this.map { item ->
             item ?: return@map
-            val objStr = Logger.jsonConverter.toJson(item)
+            val objStr = jsonConverter.toJson(item)
             objStr.run<String, Unit> {
                 try {
                     jsonArray.put(JSONObject(this))
