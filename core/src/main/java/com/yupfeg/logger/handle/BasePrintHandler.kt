@@ -2,6 +2,7 @@ package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.pool.RequestPool
 import com.yupfeg.logger.printer.BaseLogPrinter
 import org.jetbrains.annotations.TestOnly
 
@@ -33,6 +34,15 @@ abstract class BasePrintHandler {
             mutableMapOf()
         }
 
+    private var mPools : RequestPool? = null
+
+    /**
+     * 注入日志请求的缓存池
+     * */
+    internal fun setPools(pool : RequestPool){
+        mPools = pool
+    }
+
     /**
      * 设置下一个处理节点
      * @param chain
@@ -51,7 +61,11 @@ abstract class BasePrintHandler {
         if (!isHandleContent(printRequest)){
             nextHandlerChain(printRequest)
         }else{
-            onHandleLogContent(printRequest)
+            try {
+                onHandleLogContent(printRequest)
+            }finally {
+                mPools?.release(printRequest)
+            }
         }
     }
 
