@@ -9,9 +9,6 @@ import com.yupfeg.logger.LoggerConfig
  * @date 2019/9/9
  */
 
-/**默认日志输出tag*/
-private const val DEFAULT_GLOBAL_TAG = "logger"
-
 /**
  * 使用kotlin DSL方式，配置Logger参数
  * @param init dsl方式配置
@@ -28,21 +25,15 @@ fun setDslLoggerConfig(init : LoggerConfig.()->Unit) : Logger {
  * @param config
  * */
 private fun performConfigLogger(config: LoggerConfig) : Logger {
-    return Logger.addLogHeaders(if(config.logHeaders.isNullOrEmpty()) null else config.logHeaders)
-        .setGlobalLogTag(config.tag)
-        .setDisplayClassInfo(config.isDisplayClassInfo)
-        .setDisplayThreadInfo(config.isDisplayThreadInfo)
-        .addPrintHandlerList(list = config.printHandlers)
-        .addLogPrinters(list = config.logPrinters)
-        .setJsonConverter(config.jsonConverter)
+    return Logger.prepare(config)
 }
 /**
  * 输出verbose等级的日志
- * * 默认的日志tag[Logger.mGlobalLogTag]
+ * * 使用全局的日志tag
  * @param msg 日志内容
  */
 @Suppress("SpellCheckingInspection", "unused")
-fun logv(msg : Any) = Logger.v(msg)
+fun logv(msg : Any) = Logger.v(msg = msg)
 
 /**
  * 输出debug等级的日志
@@ -54,11 +45,11 @@ fun logv(tag : String,msg: Any) = Logger.v(tag, msg)
 
 /**
  * 输出debug等级的日志
- * * 默认的日志tag[Logger.mGlobalLogTag]
+ * * 使用全局的日志tag
  * @param msg 日志内容
  */
 @Suppress("SpellCheckingInspection", "unused")
-fun logd(msg : Any) = Logger.d(msg)
+fun logd(msg : Any) = Logger.d(msg = msg)
 
 /**
  * 输出debug等级的日志
@@ -70,11 +61,11 @@ fun logd(tag : String, msg : Any?) = Logger.d(tag,msg)
 
 /**
  * 输出info等级的日志
- * * 默认的日志tag[DEFAULT_GLOBAL_TAG]
+ * * 使用全局的日志tag
  * @param msg 日志内容
  */
 @Suppress("SpellCheckingInspection", "unused")
-fun logi(msg : Any?) = Logger.i(msg)
+fun logi(msg : Any?) = Logger.i(msg = msg)
 
 /**
  * 输出info等级的日志
@@ -86,11 +77,11 @@ fun logi(tag : String, msg : Any) = Logger.i(tag,msg)
 
 /**
  * 输出waring等级的日志
- * * 默认的日志tag[DEFAULT_GLOBAL_TAG]
+ * * 使用全局的日志tag
  * @param msg 日志内容
  */
 @Suppress("SpellCheckingInspection", "unused")
-fun logw(msg: Any?) = logw(DEFAULT_GLOBAL_TAG,msg)
+fun logw(msg: Any?) = Logger.w(msg = msg)
 
 /**
  * 输出waring等级的日志
@@ -104,11 +95,11 @@ fun logw(tag: String,msg: Any?) {
 
 /**
  * 输出error等级的日志
- * * 默认的日志tag[DEFAULT_GLOBAL_TAG]
+ * * 使用全局的日志tag
  * @param msg 日志内容
  */
 @Suppress("SpellCheckingInspection", "unused")
-fun loge(msg: Any?) = loge(DEFAULT_GLOBAL_TAG,msg)
+fun loge(msg: Any?) = Logger.e(msg = msg)
 
 /**
  * 输出error等级的日志
