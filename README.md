@@ -23,10 +23,27 @@ dependencies {
 }
 ```
 
+## 更新日志
+
+- v1.2.0
+  1. 整合`Logger`全局配置逻辑，移除所有单独动态设置配置方法，避免在日志输出后修改配置，kotlin-dsl方式的配置逻辑不受影响，限制只能调用执行一次，再次调用则报错
+  2. 新增日志输出请求类`LogPrintRequest`的缓存复用机制，避免在频繁输出日志情况下，频繁创建销毁日志请求对象。
+- v1.1.2
+  1. 替换默认输出Logcat的格式类
+- v1.1.0
+  1. 迁移`Logger`类内部输出的格式化日志逻辑 
+  2. 优化修改`PrintHandler`的逻辑，并添加存在多个日志输出类时的缓存机制，避免重复格式化日志操作
+  3. 将日志输出抽象为发起日志请求`LogPrintRequest`，由请求类包装所有日志输出配置，移除对Logger类的依赖
+  4. 对外开放提供设置json解析器的功能，将内置gson解析内聚到一个类，内部的json解析拓展函数移除对Logger类的依赖
+  5. 优化添加日志类型解析器的逻辑，只能添加到头节点优先执行，并对外隐藏所有内置的日志内容类型解析器，避免添加重复类型解析器
+- v1.0.4
+  1. 移除默认添加LogcatPrint,将日志输出策略完全交由外部控制，避免外部无法控制
+- v1.0.3
+  1. 抽象json解析的`converter`类，允许外部配置json解析策略
 ## 简单使用
 
 通过`kotlin`的**top-level**函数包装，可在外部通过导入`com.yupfeg.logger.ext`包直接调用
-> 1.0.4版本后，需要通过`Logger.addPrinter`配置继承添加`LogcatPrint`才能将日志输出到Logcat。
+> `1.0.4`版本后，需要通过`Logger.addPrinter`配置继承添加`LogcatPrint`才能将日志输出到Logcat。
 > 或者通过kotlin-dsl方式，通过`setDslLoggerConfig`函数的`logPrinters`属性添加`LogcatPrint`类对象
 
 
@@ -42,12 +59,11 @@ logw()
 loge()
 ```
 
-只要是存在对应类型的`PrintHandler`都能将其转化为`String`进行输出
+只要存在对应类型的`PrintHandler`解析类都能将其转化为`String`进行输出
 
-
-
-如，
+如：
 直接输出`ArrayList`类型
+
 ```
 D/logger: -print to logcat- 
     ╔══════════════════════════════════════════════════════════════════════════════════════════════════
@@ -127,7 +143,7 @@ D/logger: -print to logcat-
 
 ## 进阶配置
 
-使用`kotlin`可通过`setDslLoggerConfig`函数通过kotlin-dsl方式配置`Logger`
+使用`Kotlin`可通过`setDslLoggerConfig`函数通过kotlin-dsl方式配置`Logger`
 
 ``` kotlin
 setDslLoggerConfig {
@@ -168,35 +184,33 @@ setDslLoggerConfig {
 
 ### JSON解析
 
-`Converter`层，隔离具体json解析实现
+增加`Converter`层，隔离具体json解析策略
 
-内置默认为`GsonConverter`解析json。
+内置默认使用`GsonConverter`解析json。
 
-~~外部可实现`JsonConverter`接口创建自定义json解析策略，然后调用`Logger.jsonConverter`设置对日志内容的解析策略~~
-
+> ~~外部可实现`JsonConverter`接口创建自定义json解析策略，然后调用`Logger.jsonConverter`设置对日志内容的解析策略~~
+>
 > 在v1.2.0版本之后已移除，整合到`Logger.prepare`方法内配置`jsonConverter`属性。
 
 
-
-
-### 类型处理
+### 类型解析处理
 
 目前内置了
-- `BundlePrintHandler`
-- `CollectionPrintHandler`，处理集合对象类型
-- `IntentPrintHandler`
-- `MapPrintHandler`
 - `StringPrintHandler`
 - `ThrowablePrintHandler`
-- `ObjectPrintHandler`
+- `BundlePrintHandler`
+- `IntentPrintHandler`
+- `MapPrintHandler`
+- `CollectionPrintHandler`
+- `ObjectPrintHandler` ， 作为兜底的解析类型处理器
+
 日志内容类型处理器，将对应类型转化为字符串日志输出，通常已足够应付日常使用
-如果需要处理其他类型，通过继承`BasePrintHandler`来处理如何输出为日志字符串。
+如果需要处理其他类型，通过继承`BasePrintHandler`来处理如何解析指定类型为日志字符串。
 
 > - 如果使用`kotlin`，则可通过dsl方式调用`setDslLoggerConfig`函数配置`printHandlers`属性添加自定义日志内容处理类。
->
 > - ~~或者直接通过`Logger.addPrintHandler`函数添加。~~（v1.2.0版本后已移除，整合`Logger.prepare`方法内配置）
-
-外部调用只需要将类型传入，然后通过处理类转化为字符串进行日志输出。
+>
+> 所有外部添加的类型处理器都会被添加在内置解析处理器前面，**优先尝试处理**。
 
 ### 日志请求缓存
 
@@ -204,12 +218,13 @@ v1.2.0版本新增
 
 外部每调用一个日志输出函数，都会从日志输出请求缓存池`RequestPool`里获取缓存回收复用的请求，然后赋值新的日志信息。
 避免重复创建日志输出请求对象，默认缓存池大小为10。
-如果需要在高并发情况下，频繁输出日志，可以通过`setDslLoggerConfig`函数设置`requestPoolSize`属性进行修改配置
+如果需要在高并发情况下频繁输出日志，可以通过`setDslLoggerConfig`函数设置`requestPoolSize`属性进行适当修改缓存池大小。
 
 ### 输出目标
 
 ~~库仅内置了输出到`Logcat`的输出类，且其默认与`Logger`类配置的`isDebug`绑定，仅debug状态下执行输出操作。~~
 默认内置了`LogcatPrinter`的输出类，输出到logcat ，支持输出长日志 ，超出3K长度的日志 ，会自动拆分为多个日志。
+
 > 1.0.4版本后，~~需要通过`Logger.addPrinter`配置~~(v1.2.0版本后已移除，整合`Logger.prepare`方法内配置)
 > 添加继承实现`LogcatPrint`输出类，才能输出到Logcat。
 > 或者通过kotlin-dsl方式，通过`setDslLoggerConfig`函数的`logPrinters`属性添加`LogcatPrint`
@@ -227,7 +242,7 @@ v1.2.0版本新增
 ### 日志美化
 
 通过在`BaseLogPrinter`实现类的构造函数上，设置`Formatter`类，可在每条日志内容外部添加一个**日志格式框**。
-默认使用内置的`SimpleFormatterImpl`，添加左侧双格缩进的日志装饰，方便进行复制日志内容
+如输出到`Logcat`的输出类`LogcatPrinter`，默认使用内置的`SimpleFormatterImpl`，默认添加左侧双格缩进的日志装饰，方便复制日志输出内容
 
 ## Tanks
 [SAF-Kotlin-log](https://github.com/fengzhizi715/SAF-Kotlin-log)
