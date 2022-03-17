@@ -36,6 +36,8 @@ abstract class BasePrintHandler {
 
     private var mPools : RequestPool? = null
 
+    private val mLock = Any()
+
     /**
      * 注入日志请求的缓存池
      * */
@@ -88,8 +90,9 @@ abstract class BasePrintHandler {
      * @param request 当前日志输出请求
      * */
     protected open fun onHandleLogContent(request : LogPrintRequest){
-        synchronized(request){
-            //加锁防止并发情况下缓存混乱，同一个类型处理器只能同时发送一个日志
+        synchronized(mLock){
+            //加锁防止并发情况下缓存获取到其他日志内容
+            //同一个类型的处理器只能同时处理一个日志内容
             request.printers.forEach { printer ->
                 if (!printer.isEnable) return@forEach
                 printLogContent(request,printer)
