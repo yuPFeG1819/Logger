@@ -4,7 +4,6 @@ import com.yupfeg.logger.converter.GsonConverter
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.handle.*
 import com.yupfeg.logger.handle.config.LogPrintRequest
-import com.yupfeg.logger.pool.RequestPool
 import com.yupfeg.logger.printer.BaseLogPrinter
 
 /**
@@ -18,15 +17,7 @@ internal class LoggerCore(val config : LoggerConfig) {
     companion object{
         /**默认日志输出tag*/
         private const val DEF_GLOBAL_TAG = "logger"
-        /**最小的日志缓冲区*/
-        private const val DEF_POOL_SIZE = 10
     }
-
-    /**日志输出请求的缓存池*/
-    private val mRequestPools : RequestPool = RequestPool(
-        if (config.requestPoolSize > 0) config.requestPoolSize
-        else DEF_POOL_SIZE
-    )
 
     /**全局默认的日志tag*/
     internal val mGlobalLogTag : String = config.tag ?: DEF_GLOBAL_TAG
@@ -57,6 +48,9 @@ internal class LoggerCore(val config : LoggerConfig) {
 
     init {
         initPrintHandler()
+        if (config.requestPoolSize > 0){
+            LogPrintRequest.maxPoolSize = config.requestPoolSize
+        }
         config.logPrinters?.also {
             mLogPrinters.addAll(it)
         }
@@ -82,7 +76,6 @@ internal class LoggerCore(val config : LoggerConfig) {
 
         //将所有类型处理器串联成单链表结构
         for (i in 0 until mPrintHandlers.size) {
-            mPrintHandlers[i].setPools(mRequestPools)
             if (i == 0) continue
             mPrintHandlers[i - 1].setNextChain(mPrintHandlers[i])
         }
@@ -103,14 +96,14 @@ internal class LoggerCore(val config : LoggerConfig) {
         tag : String?,
         message : Any
     ){
-        val request = getLogPrintRequest().apply {
+        val request = obtainLogPrintRequest().apply {
             setNewContent(level,tag?:mGlobalLogTag,message)
         }
         mPrintHandlerChain.handlePrintContent(request)
     }
 
-    private fun getLogPrintRequest() : LogPrintRequest{
-        return mRequestPools.acquire() ?: LogPrintRequest(
+    private fun obtainLogPrintRequest() : LogPrintRequest{
+        return LogPrintRequest.obtain() ?: LogPrintRequest(
             printers = mLogPrinters,
             logHeaders = mLogHeaders,
             isPrintClassInfo = isPrintClassInfo,

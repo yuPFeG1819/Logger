@@ -2,7 +2,6 @@ package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.LogPrintRequest
-import com.yupfeg.logger.pool.RequestPool
 import com.yupfeg.logger.printer.BaseLogPrinter
 import org.jetbrains.annotations.TestOnly
 
@@ -19,7 +18,7 @@ import org.jetbrains.annotations.TestOnly
 abstract class BasePrintHandler {
 
     companion object{
-        /**最小的调用栈偏移量，尽可能确保过滤的调用栈内无用信息*/
+        /**最小的调用栈偏移量，尽可能确保过滤调用栈内的无用信息*/
         private const val MIN_STACK_OFFSET = 10
     }
 
@@ -33,15 +32,6 @@ abstract class BasePrintHandler {
         lazy(LazyThreadSafetyMode.SYNCHRONIZED){
             mutableMapOf()
         }
-
-    private var mPools : RequestPool? = null
-
-    /**
-     * 注入日志请求的缓存池
-     * */
-    internal fun setPools(pool : RequestPool){
-        mPools = pool
-    }
 
     /**
      * 设置下一个处理节点
@@ -64,7 +54,7 @@ abstract class BasePrintHandler {
             try {
                 onHandleLogContent(printRequest)
             }finally {
-                mPools?.release(printRequest)
+                LogPrintRequest.release(printRequest)
             }
         }
     }
@@ -131,7 +121,6 @@ abstract class BasePrintHandler {
      * */
     abstract fun isHandleContent(request : LogPrintRequest) : Boolean
 
-
     /**
      * 格式化输出日志内容
      * - 默认如果存在相同格式化类的日志内容，则该方法只会调用一次
@@ -184,17 +173,17 @@ abstract class BasePrintHandler {
      * */
     protected fun getFormatLogContentWrapper(
         formatter: Formatter,
-        handleConfig: LogPrintRequest
+        request: LogPrintRequest
     ): String {
         return StringBuilder().apply {
             append(formatter.top)
             //顶部额外信息
-            appendLogHeaderContent(formatter,handleConfig.logHeaders)
-            if (handleConfig.isPrintThreadInfo){
+            appendLogHeaderContent(formatter,request.logHeaders)
+            if (request.isPrintThreadInfo){
                 //调用所在线程信息
                 appendThreadInfo(formatter)
             }
-            if (handleConfig.isPrintClassInfo){
+            if (request.isPrintClassInfo){
                 //当前调用位置信息
                 appendLogInvokeStack(formatter)
             }

@@ -43,7 +43,7 @@ class LoggerConfig {
     var jsonConverter : JsonConverter? = null
 
     /**
-     * 日志请求对象缓存池大小，默认为10，如果日志频率高尝试可适当提高缓存
+     * 日志请求对象缓存池大小，默认为30，如果日志频率高尝试可适当提高缓存命中率，或者适当降低缓存数量，减少内存占用
      * */
-    var requestPoolSize : Int = 10
+    var requestPoolSize : Int = 30
 }
