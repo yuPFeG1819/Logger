@@ -4,12 +4,6 @@ import com.yupfeg.logger.Logger
 import com.yupfeg.logger.LoggerConfig
 
 /**
- * 日志输出相关的Top-Level方法
- * @author yuPFeG
- * @date 2019/9/9
- */
-
-/**
  * 使用kotlin DSL方式，配置Logger参数
  * @param init dsl方式配置
  * */
@@ -89,9 +83,7 @@ fun logw(msg: Any?) = Logger.w(msg = msg)
  * @param msg 日志内容
  */
 @Suppress("SpellCheckingInspection", "unused")
-fun logw(tag: String,msg: Any?) {
-    Logger.w(tag,msg)
-}
+fun logw(tag: String,msg: Any?) = Logger.w(tag,msg)
 
 /**
  * 输出error等级的日志
