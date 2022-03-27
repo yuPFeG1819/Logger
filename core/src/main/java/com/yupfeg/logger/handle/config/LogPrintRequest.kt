@@ -33,7 +33,7 @@ class LogPrintRequest internal constructor(
         /**最大缓存数量*/
         var maxPoolSize : Int = DEF_MAX_POOL_SIZE
 
-        /**维护一个Head，利用链表结构，减少初始内存占用*/
+        /**维护一个Head，单链表构成的LIFO栈结构*/
         private var mPools : LogPrintRequest? = null
         private var mPoolSize : Int = 0
 
