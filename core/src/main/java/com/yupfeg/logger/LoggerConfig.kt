@@ -6,6 +6,7 @@ import com.yupfeg.logger.printer.BaseLogPrinter
 
 /**
  * 日志库的配置类
+ * - 提供给外部对日志输出进行全局配置
  * @author yuPFeG
  * @date 2020/12/31
  */

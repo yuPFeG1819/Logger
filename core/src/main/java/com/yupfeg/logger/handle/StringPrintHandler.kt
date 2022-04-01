@@ -21,9 +21,9 @@ internal class StringPrintHandler : BasePrintHandler(), Parsable<String> {
     }
 
     override fun formatLogContent(logFormatter: Formatter, request: LogPrintRequest): String {
-        val logContentFormat = getFormatLogContentWrapper(logFormatter,request)
+        val logContentFormat = getLogFormatContentWrap(logFormatter)
         val trimLog = trimLogContent(request.logContent)
-        val parseContent = parse2String(trimLog,logFormatter,request.jsonConverter)
+        val parseContent = parse2String(trimLog,logFormatter,globalJsonConverter)
         return String.format(logContentFormat, parseContent)
     }
 

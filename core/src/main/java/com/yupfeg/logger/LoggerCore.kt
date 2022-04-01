@@ -1,10 +1,11 @@
 package com.yupfeg.logger
 
 import com.yupfeg.logger.converter.GsonConverter
-import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.handle.*
 import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.handle.config.PrintHandleConfig
 import com.yupfeg.logger.printer.BaseLogPrinter
+import kotlin.properties.Delegates
 
 /**
  * 日志库的内部中转核心类
@@ -12,7 +13,7 @@ import com.yupfeg.logger.printer.BaseLogPrinter
  * @author yuPFeG
  * @date 2022/03/15
  */
-internal class LoggerCore(val config : LoggerConfig) {
+internal class LoggerCore(private val config : LoggerConfig) {
 
     companion object{
         /**默认日志输出tag*/
@@ -20,16 +21,7 @@ internal class LoggerCore(val config : LoggerConfig) {
     }
 
     /**全局默认的日志tag*/
-    internal val mGlobalLogTag : String = config.tag ?: DEF_GLOBAL_TAG
-
-    /**日志额外信息*/
-    private val mLogHeaders : List<String>?= config.logHeaders
-
-    /**是否在日志中输出当前线程信息*/
-    private var isPrintThreadInfo : Boolean = config.isDisplayThreadInfo
-
-    /**是否在日志中输出当前调用栈位置信息*/
-    private var isPrintClassInfo : Boolean = config.isDisplayClassInfo
+    private val mGlobalLogTag : String = config.tag ?: DEF_GLOBAL_TAG
 
     /**
      * 日志输出类集合
@@ -41,25 +33,36 @@ internal class LoggerCore(val config : LoggerConfig) {
     private val mPrintHandlers = mutableListOf<BasePrintHandler>()
 
     /**当前第一个执行日志内容处理的类*/
-    private lateinit var mPrintHandlerChain : BasePrintHandler
-
-    /**日志内容json解析器*/
-    private var jsonConverter : JsonConverter = config.jsonConverter ?: GsonConverter()
+    private var mPrintHandlerChain : BasePrintHandler by Delegates.notNull()
 
     init {
-        initPrintHandler()
         if (config.requestPoolSize > 0){
             LogPrintRequest.maxPoolSize = config.requestPoolSize
         }
-        config.logPrinters?.also {
-            mLogPrinters.addAll(it)
-        }
+        initPrintHandlers()
+        val printHandleConfig = PrintHandleConfig(
+            printers = initLogPrinters(),
+            logHeaders = config.logHeaders,
+            isPrintClassInfo = config.isDisplayThreadInfo,
+            isPrintThreadInfo = config.isDisplayClassInfo,
+            jsonConverter = config.jsonConverter ?: GsonConverter(),
+            isMultiPrinter = mLogPrinters.size > 1
+        )
+        chainPrintHandler(printHandleConfig)
     }
 
     // <editor-fold desc="初始化配置">
 
-    private fun initPrintHandler(){
-        //外部自定义的处理器
+    private fun initLogPrinters() : Set<BaseLogPrinter>{
+        val printers = mutableSetOf<BaseLogPrinter>()
+        config.logPrinters?.also {
+            printers.addAll(it)
+        }
+        return printers
+    }
+
+    private fun initPrintHandlers(){
+        //外部自定义的处理器，优先于内置处理器
         config.printHandlers?.also {
             mPrintHandlers += it
         }
@@ -73,13 +76,17 @@ internal class LoggerCore(val config : LoggerConfig) {
             this += CollectionPrintHandler()
             this += ObjectPrintHandler()
         }
+    }
 
+    private fun chainPrintHandler(handleConfig : PrintHandleConfig){
         //将所有类型处理器串联成单链表结构
         for (i in 0 until mPrintHandlers.size) {
             if (i == 0) continue
-            mPrintHandlers[i - 1].setNextChain(mPrintHandlers[i])
+            mPrintHandlers[i - 1].apply {
+                setPrintConfig(handleConfig)
+                setNextChain(mPrintHandlers[i])
+            }
         }
-
         mPrintHandlerChain = mPrintHandlers[0]
     }
 
@@ -96,21 +103,10 @@ internal class LoggerCore(val config : LoggerConfig) {
         tag : String?,
         message : Any
     ){
-        val request = obtainLogPrintRequest().apply {
+        val request = LogPrintRequest.obtain().apply {
             setNewContent(level,tag?:mGlobalLogTag,message)
         }
         mPrintHandlerChain.handlePrintContent(request)
-    }
-
-    private fun obtainLogPrintRequest() : LogPrintRequest{
-        return LogPrintRequest.obtain() ?: LogPrintRequest(
-            printers = mLogPrinters,
-            logHeaders = mLogHeaders,
-            isPrintClassInfo = isPrintClassInfo,
-            isPrintThreadInfo = isPrintThreadInfo,
-            jsonConverter = jsonConverter,
-            isMultiPrinter = mLogPrinters.size > 1
-        )
     }
 
 }

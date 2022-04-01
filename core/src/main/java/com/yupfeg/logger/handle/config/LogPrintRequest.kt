@@ -1,31 +1,15 @@
 package com.yupfeg.logger.handle.config
 
 import com.yupfeg.logger.LoggerLevel
-import com.yupfeg.logger.converter.JsonConverter
-import com.yupfeg.logger.printer.BaseLogPrinter
 
 /**
  * 日志内容输出请求
- * - 提供给处理链上所有内容处理类的同一个不可变对象
- * - 请求对象只允许修改
+ * - 提供给日志类型处理链上所有内容处理类的共享不可变对象，
+ * 限制仅能由日志请求发起端进行赋值修改
  * @author yuPFeG
  * @date 2021/01/22
  */
-class LogPrintRequest internal constructor(
-    /**当前日志可能的输出目标*/
-    val printers : Set<BaseLogPrinter>,
-    /**当前日志内容上，包含的顶部信息*/
-    val logHeaders : List<String>?,
-    /**是否在日志中打印当前线程信息*/
-    val isPrintThreadInfo : Boolean = true,
-    /**是否在日志中打印当前打印日志的位置*/
-    val isPrintClassInfo : Boolean = true,
-    /**json解析器*/
-    val jsonConverter: JsonConverter,
-    /**是否存在多个输出器*/
-    val isMultiPrinter : Boolean = false
-){
-
+class LogPrintRequest private constructor(){
     companion object{
         /**默认最大的日志对象缓存大小*/
         private const val DEF_MAX_POOL_SIZE = 30
@@ -42,7 +26,8 @@ class LogPrintRequest internal constructor(
         /**
          * 尝试获取日志请求对象，避免频繁分配新对象，如果没有缓存则返回null
          * */
-        internal fun obtain() : LogPrintRequest?{
+        @JvmStatic
+        internal fun obtain() : LogPrintRequest{
             return synchronized(mLock){
                 var request : LogPrintRequest? = null
                 mPools?.also {
@@ -51,7 +36,7 @@ class LogPrintRequest internal constructor(
                     it.next = null
                     mPoolSize--
                 }
-                request
+                request ?: LogPrintRequest()
             }
         }
 
@@ -60,6 +45,7 @@ class LogPrintRequest internal constructor(
          * @param request 已完成的请求对象
          * @return true-表示已成功缓存
          * */
+        @JvmStatic
         internal fun release(request: LogPrintRequest) : Boolean{
             request.reset()
             synchronized(mLock){
@@ -104,6 +90,12 @@ class LogPrintRequest internal constructor(
         mOriginLogTag = null
     }
 
+    /**
+     * 设置新的日志内容
+     * @param level 日志等级
+     * @param tag 日志输出标签
+     * @param message 日志内容
+     * */
     internal fun setNewContent(level : LoggerLevel, tag : String, message : Any){
         logLevel = level
         mOriginContent = message

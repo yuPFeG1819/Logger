@@ -19,10 +19,10 @@ internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
     }
 
     override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
-        val logFormat = getFormatLogContentWrapper(logFormatter,request)
+        val logFormat = getLogFormatContentWrap(logFormatter)
         return String.format(
             logFormat,
-            parse2String(request.logContent as Map<*, *>,logFormatter,request.jsonConverter)
+            parse2String(request.logContent as Map<*, *>,logFormatter,globalJsonConverter)
         )
     }
 

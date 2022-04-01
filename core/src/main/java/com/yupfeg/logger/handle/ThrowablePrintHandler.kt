@@ -22,10 +22,10 @@ internal class ThrowablePrintHandler : BasePrintHandler(), Parsable<Throwable> {
     }
 
     override fun formatLogContent(logFormatter: Formatter, request: LogPrintRequest): String {
-        val formatContent = getFormatLogContentWrapper(logFormatter,request)
+        val formatContent = getLogFormatContentWrap(logFormatter)
         return String.format(
             formatContent,parse2String(
-                request.logContent as Throwable,logFormatter,request.jsonConverter
+                request.logContent as Throwable,logFormatter,globalJsonConverter
             )
         )
     }

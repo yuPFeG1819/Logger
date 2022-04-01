@@ -20,7 +20,7 @@ object Logger {
     @JvmStatic
     fun prepare(config: LoggerConfig) : Logger{
         mLoggerCore?.also {
-            throw IllegalArgumentException("you must prepare Logger before print log")
+            throw IllegalArgumentException("cant replay prepare Logger，only config once")
         }
         mLogConfig = config
         return this

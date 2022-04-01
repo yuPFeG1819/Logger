@@ -23,9 +23,9 @@ internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
     }
 
     override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
-        val format = getFormatLogContentWrapper(logFormatter,request)
+        val format = getLogFormatContentWrap(logFormatter)
         return String.format(
-            format, parse2String(request.logContent as Intent,logFormatter,request.jsonConverter)
+            format, parse2String(request.logContent as Intent,logFormatter,globalJsonConverter)
         )
     }
 

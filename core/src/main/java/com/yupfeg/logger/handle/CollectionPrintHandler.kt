@@ -28,14 +28,14 @@ internal class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<
         val firstItem = collect.firstOrNull()
         val isPrimitiveType = isPrimitiveType(firstItem)
         val extraContent = String.format(mListHeaderFormat, collect.javaClass, collect.size)
-        val logFormatContent = getFormatLogContentWrapper(logFormatter,request)
+        val logFormatContent = getLogFormatContentWrap(logFormatter)
         return if (isPrimitiveType){
             String.format(
                 logFormatContent, "${extraContent}${logFormatter.left}${collect}"
             )
         }else{
             val parseContent = parse2String(
-                collect,logFormatter,request.jsonConverter
+                collect,logFormatter,globalJsonConverter
             )
             String.format(logFormatContent, "${extraContent}$parseContent")
         }

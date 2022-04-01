@@ -20,9 +20,9 @@ internal class BundlePrintHandler : BasePrintHandler(), Parsable<Bundle> {
     }
 
     override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
-        val logContentFormat = getFormatLogContentWrapper(logFormatter,request)
+        val logContentFormat = getLogFormatContentWrap(logFormatter)
         val logContent = parse2String(
-            request.logContent as Bundle,logFormatter,request.jsonConverter
+            request.logContent as Bundle,logFormatter,globalJsonConverter
         )
         return String.format(logContentFormat,logContent)
     }
