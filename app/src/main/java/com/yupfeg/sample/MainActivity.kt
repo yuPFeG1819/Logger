@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity(){
             logi(it)
         }
 
-        logd(bundleOf("test" to "newTest"))
+        logd(bundleOf("test" to "newTest","test2" to "newTest2"))
     }
 
     override fun onStart() {
