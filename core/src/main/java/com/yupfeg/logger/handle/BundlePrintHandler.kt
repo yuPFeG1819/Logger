@@ -7,6 +7,7 @@ import com.yupfeg.logger.converter.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
+import org.json.JSONException
 
 /**
  * [Bundle]类型的日志输出处理类
@@ -33,10 +34,14 @@ internal class BundlePrintHandler : BasePrintHandler(), Parsable<Bundle> {
         jsonConverter: JsonConverter
     ): String {
         val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
-        val logContent = content
-            .parseToJSONObject(jsonConverter)
-            .formatJSONString()
-            .replace("\n", "\n${formatter.left}")
+        val logContent = try {
+            content
+                .parseToJSONObject(jsonConverter)
+                .formatJSONString()
+                .replace("\n", "\n${formatter.left}")
+        }catch (e : JSONException){
+            "Invalid Log Bundle content Json"
+        }
         return "$header$logContent"
     }
 

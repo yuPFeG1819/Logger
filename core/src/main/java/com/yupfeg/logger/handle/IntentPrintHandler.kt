@@ -8,6 +8,7 @@ import com.yupfeg.logger.converter.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -34,12 +35,14 @@ internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
         formatter: Formatter,
         jsonConverter: JsonConverter
     ): String {
-        //内部函数
-        fun parseBundleString(extras: Bundle)
-            = extras.parseToJSONObject(jsonConverter).formatJSONString()
-
         val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
-        return header + JSONObject().apply {
+        return header + createIntentJSONObject(content,jsonConverter)
+            .formatJSONString()
+            .replace("\n", "\n${formatter.left}")
+    }
+
+    private fun createIntentJSONObject(content: Intent,jsonConverter: JsonConverter) : JSONObject{
+        return JSONObject().apply {
             put("Scheme", content.scheme)
             put("Action", content.action)
             put("DataString", content.dataString)
@@ -48,11 +51,17 @@ internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
             put("ComponentInfo", content.component)
             put("Categories", content.categories)
             content.extras?.also {
-                this.put("Extras",parseBundleString(it))
+                this.put("Extras",parseBundleString(it,jsonConverter))
             }
         }
-            .formatJSONString()
-            .replace("\n", "\n${formatter.left}")
+    }
+
+    private fun parseBundleString(extras: Bundle,jsonConverter: JsonConverter) : String{
+        return try {
+            extras.parseToJSONObject(jsonConverter).formatJSONString()
+        }catch (e : JSONException){
+            "Invalid Log Bundle content Json"
+        }
     }
 
 
