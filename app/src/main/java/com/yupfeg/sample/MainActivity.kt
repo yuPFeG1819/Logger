@@ -7,6 +7,7 @@ import com.yupfeg.logger.ext.logd
 import com.yupfeg.logger.ext.logi
 import com.yupfeg.logger.ext.logw
 import java.lang.NullPointerException
+import java.util.HashSet
 
 /**
  *
@@ -16,6 +17,11 @@ import java.lang.NullPointerException
 class MainActivity : AppCompatActivity(){
 
     private data class TestMan(val name : String,val age : Int = 0)
+
+    private data class CustomDataBean(
+        val newData : String,
+        val newList : List<String>
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +39,12 @@ class MainActivity : AppCompatActivity(){
         })
 
         logd(mutableMapOf("11" to 22,"22" to 33,"33" to 121))
+
+        val set = HashSet<CustomDataBean>()
+        set.add(CustomDataBean(newData = "11", newList = mutableListOf("111item1","111item2","111item3")))
+        set.add(CustomDataBean(newData = "22", newList = mutableListOf("222item1","222item2","222item3")))
+        logi(set)
+
 
         intent?.also {
             logi(it)
