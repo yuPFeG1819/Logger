@@ -1,8 +1,8 @@
 package com.yupfeg.logger.handle
 
-import com.yupfeg.logger.converter.json.formatJSONString
 import com.yupfeg.logger.converter.JsonConverter
-import com.yupfeg.logger.converter.json.parseToJSONObject
+import com.yupfeg.logger.converter.formatJSONString
+import com.yupfeg.logger.converter.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
@@ -13,6 +13,7 @@ import com.yupfeg.logger.handle.parse.Parsable
  * @date 2021/01/22
  */
 internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
+
     override fun isHandleContent(request: LogPrintRequest): Boolean {
         //不属于map类型不予处理，转为下一个handler进行处理
         return request.logContent is Map<*,*>
@@ -31,7 +32,7 @@ internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
         formatter: Formatter,
         jsonConverter: JsonConverter
     ): String {
-        val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
+        val header = "${content.javaClass} size = ${content.size}${Formatter.BR}${formatter.left}"
         val logContent = content
             .parseToJSONObject(jsonConverter)
             .formatJSONString()

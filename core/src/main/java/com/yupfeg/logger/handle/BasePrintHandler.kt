@@ -30,6 +30,7 @@ abstract class BasePrintHandler {
 
     /**
      * 日志库的全局配置类，所有日志处理类共享同一个配置对象实例
+     * - 共享的不可变配置对象
      * */
     protected var printHandleConfig : PrintHandleConfig by Delegates.notNull()
         private set
@@ -86,7 +87,7 @@ abstract class BasePrintHandler {
 
     /**
      * hook入口，在当前日志内容处理器执行之前调用
-     * - 在`isHandleContent`之前被调用
+     * - 在`isHandleContent`之前被调用，允许子类继承实现额外操作
      * */
     protected open fun prepareHandle(printRequest: LogPrintRequest) = Unit
 
@@ -112,6 +113,7 @@ abstract class BasePrintHandler {
                 printLogContent(request,printer)
             }
             if (printHandleConfig.isMultiPrinter){
+                //存在多个输出类，需要移除缓存
                 cleanPrintContentCache()
             }
         }
@@ -183,7 +185,7 @@ abstract class BasePrintHandler {
     }
 
     /**
-     * 清空所有输出日志缓存
+     * 清空当前处理类的所有输出日志缓存
      * - 必须要在当前日志内容输出完毕后才进行移除操作
      * */
     protected fun cleanPrintContentCache(){
@@ -252,7 +254,7 @@ abstract class BasePrintHandler {
     }
 
     /**
-     * 添加日志方法调用位置的栈信息
+     * [StringBuilder]的拓展函数，添加日志方法调用位置的栈信息
      * * 当前外部调用日志输出的调用栈信息，包括 类名、方法名、行数
      * @param formatter 日志输出的格式化类
      * */
@@ -296,7 +298,10 @@ abstract class BasePrintHandler {
         return 0
     }
 
-    /**仅测试用的，打印所有调用栈信息*/
+    /**
+     * [StringBuilder]的拓展函数，打印当前所有调用栈信息
+     * -仅测试用的，用于测试调用栈打印信息
+     * */
     @Suppress("unused")
     @TestOnly
     private fun StringBuilder.appendLogStackTrace(formatter: Formatter){

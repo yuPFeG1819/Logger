@@ -3,8 +3,8 @@ package com.yupfeg.logger.handle
 import android.content.Intent
 import android.os.Bundle
 import com.yupfeg.logger.converter.JsonConverter
-import com.yupfeg.logger.converter.json.formatJSONString
-import com.yupfeg.logger.converter.json.parseToJSONObject
+import com.yupfeg.logger.converter.formatJSONString
+import com.yupfeg.logger.converter.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable

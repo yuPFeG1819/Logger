@@ -78,8 +78,11 @@ internal class LoggerCore(private val config : LoggerConfig) {
         }
     }
 
+    /**
+     * 将所有类型处理器串联成单链表结构
+     * @param handleConfig 全局共享的不可变配置类
+     * */
     private fun chainPrintHandler(handleConfig : PrintHandleConfig){
-        //将所有类型处理器串联成单链表结构
         for (i in 0 until mPrintHandlers.size) {
             if (i == 0) continue
             mPrintHandlers[i - 1].apply {
