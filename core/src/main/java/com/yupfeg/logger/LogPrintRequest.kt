@@ -1,6 +1,4 @@
-package com.yupfeg.logger.handle.config
-
-import com.yupfeg.logger.LoggerLevel
+package com.yupfeg.logger
 
 /**
  * 日志内容输出请求
