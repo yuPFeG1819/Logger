@@ -19,6 +19,7 @@ interface JsonConverter {
      * @param <T>
      * @return
      */
+    @Throws(RuntimeException::class)
     fun <T> fromJson(json: String, type: Type): T
 
     /**
@@ -26,6 +27,7 @@ interface JsonConverter {
      * @param data
      * @return
      */
+    @Throws(RuntimeException::class)
     fun toJson(data: Any): String
 }
 
@@ -70,7 +72,7 @@ fun isPrimitiveTypeValue(value: Any?) = when(value){
  * * 仅用于Logger日志输出使用
  * @param jsonConverter json解析类
  */
-@Throws(JSONException::class)
+@Throws(JSONException::class,RuntimeException::class)
 internal fun Bundle.parseToJSONObject(jsonConverter: JsonConverter) : JSONObject {
     val bundle = this
     return JSONObject().also { jsonObject ->
