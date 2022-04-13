@@ -14,8 +14,8 @@ import com.yupfeg.logger.formatter.SimpleFormatterImpl
 open class LogcatPrinter(
     /**格式化日志输出格式*/
     formatter : Formatter = SimpleFormatterImpl,
-    private val enable : Boolean = true
-) : BaseLogPrinter(formatter){
+    enable : Boolean = true
+) : ILogPrinter{
 
     companion object {
         /**
@@ -25,10 +25,11 @@ open class LogcatPrinter(
         private const val MAX_STRING_LENGTH = 3 * 1024
     }
 
-    override val isEnable: Boolean
-        get() = enable
+    override val logFormatter: Formatter = formatter
 
-    override fun performPrintLog(logLevel: LoggerLevel, tag: String, msg: String) {
+    override val isEnable: Boolean = enable
+
+    override fun printLog(logLevel: LoggerLevel, tag: String, msg: String) {
         //输出到Logcat上的日志内容，需要在换行符前添加内容才能使换行符生效
         preparePrintLongLog(logLevel,tag,"-print to logcat- $msg")
     }
