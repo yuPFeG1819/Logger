@@ -2,7 +2,8 @@ package com.yupfeg.logger
 
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.handle.BasePrintHandler
-import com.yupfeg.logger.printer.BaseLogPrinter
+import com.yupfeg.logger.handle.wrap.ILogInvokeStackFilter
+import com.yupfeg.logger.printer.ILogPrinter
 
 /**
  * 日志库的配置类
@@ -24,7 +25,7 @@ class LoggerConfig {
      * */
     var isDisplayThreadInfo : Boolean  = true
     /**
-     * 是否显示当前调用栈位置
+     * 是否显示当前日志函数的调用栈位置
      * */
     var isDisplayClassInfo : Boolean   = true
     /**
@@ -36,7 +37,7 @@ class LoggerConfig {
      * 日志输出目标的集合
      * * 按集合顺序，依次尝试输出日志
      * */
-    var logPrinters : List<BaseLogPrinter> ?= null
+    var logPrinters : List<ILogPrinter> ?= null
 
     /**
      * 对象json格式化解析类，默认使用Gson
@@ -44,7 +45,15 @@ class LoggerConfig {
     var jsonConverter : JsonConverter? = null
 
     /**
-     * 日志请求对象缓存池大小，默认为30，如果日志频率高尝试可适当提高缓存命中率，或者适当降低缓存数量，减少内存占用
+     * 日志请求对象缓存池大小，默认为30，
+     * - 如果日志频率高，可适当提高缓存池大小，或者适当降低缓存数量，减少内存占用
      * */
     var requestPoolSize : Int = 30
+
+    /**
+     * 日志输出调用栈的显示过滤器集合
+     * * 按集合顺序依次尝试过滤多余的栈信息，确保定位到日志函数的调用位置
+     * * 需要配合[isDisplayClassInfo]属性为true才能生效
+     * */
+    var invokeStackFilters : List<ILogInvokeStackFilter>? = null
 }
