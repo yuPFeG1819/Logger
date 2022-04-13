@@ -2,16 +2,16 @@ package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.config.PrintHandleConfig
-import com.yupfeg.logger.printer.BaseLogPrinter
-import org.jetbrains.annotations.TestOnly
+import com.yupfeg.logger.handle.wrap.LogContentWrapHelper
+import com.yupfeg.logger.printer.ILogPrinter
 import kotlin.properties.Delegates
 
 /**
  * 处理日志输出的处理Handler链基类
- * * 采用责任链模式，高内聚，低耦合，拓展性强，可动态增加处理流程，并可动态调整处理顺序
- * * 相比策略模式，采用责任链模式，在外部添加PrintHandler类时，不需要修改Logger中对于Handler类的处理逻辑，
+ * * 采用责任链模式，高内聚，低耦合，拓展性强，可动态增加处理流程，并可动态调整处理顺序，
+ * 相比策略模式，采用责任链模式，在外部添加PrintHandler类时，不需要修改Logger中对于Handler类的处理逻辑，
  * 只需要依照责任链依次向下执行
  * * 默认内部已实现了对日志内容输出格式化的逻辑，
  * 如果需要修改对输出日志内容有其他需要，可以覆写[formatLogContent]方法生成新的输出内容
@@ -21,19 +21,32 @@ import kotlin.properties.Delegates
 abstract class BasePrintHandler {
 
     companion object{
-        /**最小的调用栈偏移量，尽可能确保过滤调用栈内的无用信息，方便快速定位到实际调用日志输出的调用位置*/
-        private const val MIN_STACK_OFFSET = 10
+        /**
+         * 日志库的处理配置，所有日志处理类共享同一个配置对象实例
+         * - 共享的不可变配置对象
+         * */
+        var printHandleConfig : PrintHandleConfig by Delegates.notNull()
+            private set
+
+        /**
+         * 日志内容包装帮助类
+         * */
+        var logContentWrapHelper : LogContentWrapHelper by Delegates.notNull()
+            private set
+
+        /**
+         * 注入日志全局的处理配置
+         * @param config 共享的不可变配置对象
+         * */
+        @JvmStatic
+        internal fun injectPrintHandleConfig(config: PrintHandleConfig){
+            printHandleConfig = config
+            logContentWrapHelper = LogContentWrapHelper(printHandleConfig)
+        }
     }
 
     /**下一个处理节点*/
     private var mNextChain : BasePrintHandler?= null
-
-    /**
-     * 日志库的全局配置类，所有日志处理类共享同一个配置对象实例
-     * - 共享的不可变配置对象
-     * */
-    protected var printHandleConfig : PrintHandleConfig by Delegates.notNull()
-        private set
 
     /**
      * 输出日志内容的缓存，以当前格式化类为key，避免重复构建相同格式的日志内容
@@ -57,14 +70,6 @@ abstract class BasePrintHandler {
      * */
     internal fun setNextChain(chain: BasePrintHandler){
         this.mNextChain = chain
-    }
-
-    /**
-     * 注入日志库的全局配置，避免重复占用内存，共享同一个对象实例
-     * @param config
-     * */
-    internal fun setPrintConfig(config: PrintHandleConfig){
-        printHandleConfig = config
     }
 
     /**
@@ -126,7 +131,7 @@ abstract class BasePrintHandler {
      * */
     protected open fun printLogContent(
         request : LogPrintRequest,
-        printer : BaseLogPrinter
+        printer : ILogPrinter
     ){
         val cache = tryGetPrintContentCache(printer.logFormatter, printHandleConfig.printers.size)
         val logContent = if (cache.isNullOrEmpty()) {
@@ -192,134 +197,12 @@ abstract class BasePrintHandler {
         mPrintContentCache.clear()
     }
 
-    // <editor-fold desc="格式化日志内容">
-
     /**
      * 获取格式化的日志内容包装字符串
      * @param formatter 日志输入格式化类
      * @return 包含`"%s"`的日志输出字符串，需要外部使用[String.format]方法，将“%s“格式化替换为实际日志内容
      * */
-    protected open fun getLogFormatContentWrap(formatter: Formatter): String {
-        return StringBuilder().apply {
-            append(formatter.top)
-            //顶部额外信息
-            appendLogHeaderContent(formatter,printHandleConfig.logHeaders)
-            if (printHandleConfig.isPrintThreadInfo){
-                //调用所在线程信息
-                appendThreadInfo(formatter)
-            }
-            if (printHandleConfig.isPrintClassInfo){
-                //当前调用位置信息
-                appendLogInvokeStack(formatter)
-            }
+    protected open fun getLogFormatContentWrap(formatter: Formatter): String
+        = logContentWrapHelper.createFormatWrapString(formatter)
 
-            append(formatter.left)
-            //实际日志内容，通过String.format进行替换
-            append("%s")
-            //日志框底部格式
-            append(formatter.bottom)
-        }.toString()
-    }
-
-    /**
-     * [StringBuilder]拓展函数，添加日志内容顶部额外信息
-     * @param formatter 日志输出的格式化类
-     * @param logHeaders 日志顶部额外信息
-     * */
-    private fun StringBuilder.appendLogHeaderContent(
-        formatter: Formatter,
-        logHeaders : List<String>?
-    ){
-        logHeaders?.takeIf { it.isNotEmpty() }
-            ?.map {header->
-                append(formatter.left)
-                append("$header \n")
-            }?.also {
-                deleteCharAt(this.lastIndex)
-                append(formatter.middle)
-            }
-    }
-
-    /**
-     * [StringBuilder]拓展函数，添加日志方法调用的线程信息
-     * @param formatter 日志输出的格式化类
-     * */
-    private fun StringBuilder.appendThreadInfo(
-        formatter: Formatter,
-    ){
-        //显示当前线程名
-        append(formatter.left)
-        append("Thread : ${Thread.currentThread().name}")
-        append(formatter.middle)
-    }
-
-    /**
-     * [StringBuilder]的拓展函数，添加日志方法调用位置的栈信息
-     * * 当前外部调用日志输出的调用栈信息，包括 类名、方法名、行数
-     * @param formatter 日志输出的格式化类
-     * */
-    private fun StringBuilder.appendLogInvokeStack(formatter: Formatter){
-        val sElements = Thread.currentThread().stackTrace
-        val stackOffset = sElements.calculateStackOffset()
-        append(formatter.left)
-        append(sElements[stackOffset].className)
-            .append(".")
-            .append(sElements[stackOffset].methodName)
-            .append(" ")
-            .append("(")
-            .append(sElements[stackOffset].fileName)
-            .append(": line :")
-            .append(sElements[stackOffset].lineNumber)
-            .append(")")
-            .append(formatter.middle)
-    }
-
-    /**
-     * [StackTraceElement]数组的拓展函数，计算调用栈的调用层次
-     * */
-    private fun Array<StackTraceElement>.calculateStackOffset(): Int {
-        var i = MIN_STACK_OFFSET
-        while (i < this.size) {
-            val name = this[i].className
-            val fileName = this[i].fileName
-            takeIf {
-                !name.contains("LoggerExtKt")
-                        && name != BaseLogPrinter::class.java.name
-                        && name != BasePrintHandler::class.java.name
-                        && !name.contains("Logger")
-                        && !fileName.contains("Logger.kt")
-                        && !fileName.contains("LoggerExt.kt")
-            }?.also {
-                return i
-            }?: run {
-                i++
-            }
-        }
-        return 0
-    }
-
-    /**
-     * [StringBuilder]的拓展函数，打印当前所有调用栈信息
-     * -仅测试用的，用于测试调用栈打印信息
-     * */
-    @Suppress("unused")
-    @TestOnly
-    private fun StringBuilder.appendLogStackTrace(formatter: Formatter){
-        val sElements = Thread.currentThread().stackTrace
-        for (sElement in sElements) {
-            append(formatter.left)
-            append(sElement.className)
-            append(".")
-            append(sElement.methodName)
-            append(" ")
-            append("(")
-            append(sElement.fileName)
-            append(": line :")
-            append(sElement.lineNumber)
-            append(")")
-            append("\n")
-        }
-        append(formatter.middle)
-    }
-    // </editor-fold>
 }
