@@ -4,7 +4,7 @@ import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
 import com.yupfeg.logger.converter.isPrimitiveTypeValue
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import org.json.JSONArray
 import org.json.JSONException
@@ -37,7 +37,7 @@ internal class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<
                 logFormatContent, "${extraContent}${logFormatter.left}${collect}"
             )
         }else{
-            //其他数据类型，需要特殊解析处理
+            //其他数据类型，需要特殊json解析处理
             val parseContent = parse2String(
                 collect,logFormatter,globalJsonConverter
             )
@@ -51,13 +51,12 @@ internal class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<
         jsonConverter: JsonConverter
     ): String {
         return try {
-
             content
                 .parseToJSONArray(jsonConverter)
                 .formatJSONString()
                 .replace("\n", "\n${formatter.left}")
-        }catch (e : JSONException){
-            "Invalid Log Collection content Json"
+        }catch (e : Exception){
+            content.toString().replace("\n", "\n${formatter.left}")
         }
     }
 
@@ -66,7 +65,7 @@ internal class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<
      * * 仅用于Logger日志输出使用
      * @param jsonConverter json解析类
      */
-    @Throws(JSONException::class)
+    @Throws(JSONException::class,RuntimeException::class)
     private fun Collection<*>.parseToJSONArray(jsonConverter: JsonConverter): JSONArray {
         return JSONArray().also { jsonArray->
             this.map { item ->

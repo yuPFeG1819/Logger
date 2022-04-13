@@ -3,8 +3,9 @@ package com.yupfeg.logger.handle
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -31,6 +32,19 @@ internal class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
         formatter: Formatter,
         jsonConverter: JsonConverter
     ): String {
+        return try {
+            parse2JsonString(content, formatter, jsonConverter)
+        }catch (e : Exception){
+            content.toString().replace("\n", "\n${formatter.left}")
+        }
+    }
+
+    @Throws(JSONException::class,RuntimeException::class)
+    private fun parse2JsonString(
+        content: Any,
+        formatter: Formatter,
+        jsonConverter: JsonConverter
+    ) : String{
         return jsonConverter.toJson(content).run { JSONObject(this) }
             .formatJSONString()
             .replace("\n", "\n${formatter.left}")

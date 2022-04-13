@@ -3,7 +3,7 @@ package com.yupfeg.logger.handle
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import org.json.JSONArray
 import org.json.JSONException
@@ -42,33 +42,31 @@ internal class StringPrintHandler : BasePrintHandler(), Parsable<String> {
         formatter: Formatter,
         jsonConverter: JsonConverter
     ) : String{
-        var message : String
-        try {
+        return try {
             when {
                 //json对象
                 content.startsWith("{") -> {
                     val jsonObject = JSONObject(content)
-                    message = jsonObject.formatJSONString().run {
+                    jsonObject.formatJSONString().run {
                         replace("\n", "\n${formatter.left}")
                     }
                 }
                 //json数组
                 content.startsWith("[") -> {
                     val jsonArray = JSONArray(content)
-                    message = jsonArray.formatJSONString().run {
+                    jsonArray.formatJSONString().run {
                         replace("\n", "\n${formatter.left}")
                     }
                 }
+                // 普通的字符串
                 else -> {
-                    // 普通的字符串
-                    message = content.replace("\n", "\n${formatter.left}")
+                    content.replace("\n", "\n${formatter.left}")
                 }
             }
         } catch (e: JSONException) {
-            message = ""
+            //特殊情况，解析失败，按普通字符串处理
+            content.replace("\n", "\n${formatter.left}")
         }
-
-        return message
     }
 
 

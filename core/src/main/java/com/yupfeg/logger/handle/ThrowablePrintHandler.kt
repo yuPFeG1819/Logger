@@ -2,7 +2,7 @@ package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import java.io.PrintWriter
 import java.io.StringWriter

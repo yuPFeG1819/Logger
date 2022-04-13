@@ -1,13 +1,12 @@
 package com.yupfeg.logger.handle
 
 import android.os.Bundle
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
 import com.yupfeg.logger.converter.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
-import org.json.JSONException
 
 /**
  * [Bundle]类型的日志输出处理类
@@ -39,8 +38,8 @@ internal class BundlePrintHandler : BasePrintHandler(), Parsable<Bundle> {
                 .parseToJSONObject(jsonConverter)
                 .formatJSONString()
                 .replace("\n", "\n${formatter.left}")
-        }catch (e : JSONException){
-            "Invalid Log Bundle content Json"
+        }catch (e : Exception){
+            content.toString().replace("\n", "\n${formatter.left}")
         }
         return "$header$logContent"
     }

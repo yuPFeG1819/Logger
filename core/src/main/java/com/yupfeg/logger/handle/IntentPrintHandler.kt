@@ -2,13 +2,12 @@ package com.yupfeg.logger.handle
 
 import android.content.Intent
 import android.os.Bundle
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
 import com.yupfeg.logger.converter.parseToJSONObject
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -36,9 +35,10 @@ internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
         jsonConverter: JsonConverter
     ): String {
         val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
-        return header + createIntentJSONObject(content,jsonConverter)
+        val intentJsonContent = createIntentJSONObject(content,jsonConverter)
             .formatJSONString()
             .replace("\n", "\n${formatter.left}")
+        return header + intentJsonContent
     }
 
     private fun createIntentJSONObject(content: Intent,jsonConverter: JsonConverter) : JSONObject{
@@ -59,8 +59,8 @@ internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
     private fun parseBundleString(extras: Bundle,jsonConverter: JsonConverter) : String{
         return try {
             extras.parseToJSONObject(jsonConverter).formatJSONString()
-        }catch (e : JSONException){
-            "Invalid Log Bundle content Json"
+        }catch (e : Exception){
+            extras.toString()
         }
     }
 

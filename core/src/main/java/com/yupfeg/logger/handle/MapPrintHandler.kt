@@ -4,7 +4,7 @@ import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
 import com.yupfeg.logger.converter.isPrimitiveTypeValue
 import com.yupfeg.logger.formatter.Formatter
-import com.yupfeg.logger.handle.config.LogPrintRequest
+import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
 import org.json.JSONException
 import org.json.JSONObject
@@ -39,8 +39,8 @@ internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
             content.parseToJSONObject(jsonConverter)
                 .formatJSONString()
                 .replace("\n", "\n${formatter.left}")
-        }catch (e: JSONException){
-            "Invalid Log Map content Json"
+        }catch (e: Exception){
+            content.toString().replace("\n", "\n${formatter.left}")
         }
         return "$header$logContent"
     }
@@ -50,7 +50,7 @@ internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
      * * 仅用于Logger日志输出使用
      * @param jsonConverter json解析类
      */
-    @Throws(JSONException::class)
+    @Throws(JSONException::class,RuntimeException::class)
     private fun Map<*, *>.parseToJSONObject(jsonConverter: JsonConverter): JSONObject {
         val originMap = this
         return JSONObject().also { jsonObject->
