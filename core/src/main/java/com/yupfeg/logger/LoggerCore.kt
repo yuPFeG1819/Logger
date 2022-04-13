@@ -2,9 +2,10 @@ package com.yupfeg.logger
 
 import com.yupfeg.logger.converter.GsonConverter
 import com.yupfeg.logger.handle.*
-import com.yupfeg.logger.handle.config.LogPrintRequest
 import com.yupfeg.logger.handle.config.PrintHandleConfig
-import com.yupfeg.logger.printer.BaseLogPrinter
+import com.yupfeg.logger.handle.wrap.DefaultLogInvokeStackFilter
+import com.yupfeg.logger.handle.wrap.ILogInvokeStackFilter
+import com.yupfeg.logger.printer.ILogPrinter
 import kotlin.properties.Delegates
 
 /**
@@ -23,15 +24,6 @@ internal class LoggerCore(private val config : LoggerConfig) {
     /**全局默认的日志tag*/
     private val mGlobalLogTag : String = config.tag ?: DEF_GLOBAL_TAG
 
-    /**
-     * 日志输出类集合
-     * * 实际输出日志时，会遍历集合内的所有类输出日志
-     * */
-    private val mLogPrinters = mutableSetOf<BaseLogPrinter>()
-
-    /**日志内容处理类的集合*/
-    private val mPrintHandlers = mutableListOf<BasePrintHandler>()
-
     /**当前第一个执行日志内容处理的类*/
     private var mPrintHandlerChain : BasePrintHandler by Delegates.notNull()
 
@@ -39,35 +31,46 @@ internal class LoggerCore(private val config : LoggerConfig) {
         if (config.requestPoolSize > 0){
             LogPrintRequest.maxPoolSize = config.requestPoolSize
         }
-        initPrintHandlers()
+        val printHandlers = initPrintHandlers()
+        val printers = initLogPrinters()
+        val filters = initLogInvokeStackFilters()
         val printHandleConfig = PrintHandleConfig(
-            printers = initLogPrinters(),
+            printers = printers,
             logHeaders = config.logHeaders,
             isPrintClassInfo = config.isDisplayThreadInfo,
             isPrintThreadInfo = config.isDisplayClassInfo,
             jsonConverter = config.jsonConverter ?: GsonConverter(),
-            isMultiPrinter = mLogPrinters.size > 1
+            isMultiPrinter = printers.size > 1,
+            invokeStackFilters = filters
         )
-        chainPrintHandler(printHandleConfig)
+        BasePrintHandler.injectPrintHandleConfig(printHandleConfig)
+        chainPrintHandler(printHandlers)
     }
 
     // <editor-fold desc="初始化配置">
 
-    private fun initLogPrinters() : Set<BaseLogPrinter>{
-        val printers = mutableSetOf<BaseLogPrinter>()
+    /**
+     * 初始化日志输出目标集合
+     * */
+    private fun initLogPrinters() : Set<ILogPrinter>{
+        val printers = mutableSetOf<ILogPrinter>()
         config.logPrinters?.also {
             printers.addAll(it)
         }
         return printers
     }
 
-    private fun initPrintHandlers(){
+    /**
+     * 初始化输出处理类集合
+     * */
+    private fun initPrintHandlers() : List<BasePrintHandler>{
+        val printHandlers = mutableListOf<BasePrintHandler>()
         //外部自定义的处理器，优先于内置处理器
         config.printHandlers?.also {
-            mPrintHandlers += it
+            printHandlers += it
         }
         //添加内置的日志输出类型处理器
-        mPrintHandlers.apply {
+        printHandlers.apply {
             this += StringPrintHandler()
             this += ThrowablePrintHandler()
             this += BundlePrintHandler()
@@ -76,21 +79,35 @@ internal class LoggerCore(private val config : LoggerConfig) {
             this += CollectionPrintHandler()
             this += ObjectPrintHandler()
         }
+        return printHandlers
+    }
+
+    /**
+     * 初始化日志调用栈过滤器集合
+     * */
+    private fun initLogInvokeStackFilters() : List<ILogInvokeStackFilter>{
+        val filters = mutableListOf<ILogInvokeStackFilter>()
+        //先添加外部自定义的过滤器
+        config.invokeStackFilters?.also {
+            filters += it
+        }
+
+        filters+= DefaultLogInvokeStackFilter()
+        return filters
     }
 
     /**
      * 将所有类型处理器串联成单链表结构
-     * @param handleConfig 全局共享的不可变配置类
+     * @param printerHandlers 日志内容类型处理集合
      * */
-    private fun chainPrintHandler(handleConfig : PrintHandleConfig){
-        for (i in 0 until mPrintHandlers.size) {
+    private fun chainPrintHandler(printerHandlers : List<BasePrintHandler>){
+        for (i in printerHandlers.indices) {
             if (i == 0) continue
-            mPrintHandlers[i - 1].apply {
-                setPrintConfig(handleConfig)
-                setNextChain(mPrintHandlers[i])
+            printerHandlers[i - 1].apply {
+                setNextChain(printerHandlers[i])
             }
         }
-        mPrintHandlerChain = mPrintHandlers[0]
+        mPrintHandlerChain = printerHandlers[0]
     }
 
     // </editor-fold>

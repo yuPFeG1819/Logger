@@ -1,11 +1,11 @@
 package com.yupfeg.sample
 
 import android.app.Application
-import com.yupfeg.logger.BuildConfig
 import com.yupfeg.logger.LoggerLevel
 import com.yupfeg.logger.ext.setDslLoggerConfig
+import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.formatter.SimpleFormatterImpl
-import com.yupfeg.logger.printer.BaseLogPrinter
+import com.yupfeg.logger.printer.ILogPrinter
 import com.yupfeg.logger.printer.LogcatPrinter
 
 /**
@@ -27,8 +27,13 @@ class MyApplication : Application(){
     }
 }
 
-private class TestPrinter : BaseLogPrinter(logFormatter = SimpleFormatterImpl){
-    override fun performPrintLog(logLevel: LoggerLevel, tag: String, msg: String) {
+private class TestPrinter : ILogPrinter{
+    override val logFormatter: Formatter
+        get() = SimpleFormatterImpl
+    override val isEnable: Boolean
+        get() = true
+
+    override fun printLog(logLevel: LoggerLevel, tag: String, msg: String) {
         println(msg)
     }
 
