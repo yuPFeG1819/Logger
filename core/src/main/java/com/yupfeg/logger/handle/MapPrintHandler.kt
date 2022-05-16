@@ -2,7 +2,7 @@ package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
-import com.yupfeg.logger.converter.isPrimitiveTypeValue
+import com.yupfeg.logger.converter.isPrimitiveTypeToString
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
@@ -16,33 +16,44 @@ import org.json.JSONObject
  */
 internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
 
+    private val mMapExtraFormat by lazy(LazyThreadSafetyMode.SYNCHRONIZED){
+        "%s size = %d${Formatter.BR}"
+    }
+
     override fun isHandleContent(request: LogPrintRequest): Boolean {
         //不属于map类型不予处理，转为下一个handler进行处理
         return request.logContent is Map<*,*>
     }
 
-    override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
-        val logFormat = getLogFormatContentWrap(logFormatter)
+    override fun formatLogContentOnlyWrap(
+        logFormatter: Formatter,
+        request: LogPrintRequest
+    ): String {
+        val map = request.logContent as Map<*,*>
+        val extraContent = String.format(mMapExtraFormat, map.javaClass, map.size)
+        val logFormatContent = getLogFormatContentWrap(logFormatter)
         return String.format(
-            logFormat,
-            parse2String(request.logContent as Map<*, *>,logFormatter,globalJsonConverter)
+            logFormatContent, "${extraContent}${logFormatter.left}${map}"
         )
     }
 
-    override fun parse2String(
-        content: Map<*, *>,
-        formatter: Formatter,
-        jsonConverter: JsonConverter
-    ): String {
-        val header = "${content.javaClass} size = ${content.size}${Formatter.BR}${formatter.left}"
-        val logContent = try {
-            content.parseToJSONObject(jsonConverter)
+    override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
+        val map = request.logContent as Map<*,*>
+        val logFormat = getLogFormatContentWrap(logFormatter)
+        val extraContent = String.format(mMapExtraFormat, map.javaClass, map.size)
+        return String.format(
+            logFormat, "${extraContent}${parse2String(request.logContent as Map<*, *>,logFormatter)}"
+        )
+    }
+
+    override fun parse2String(content: Map<*, *>,formatter: Formatter): String {
+        return try {
+            content.parseToJSONObject(globalJsonConverter)
                 .formatJSONString()
-                .replace("\n", "\n${formatter.left}")
+                .replace("\n", "${Formatter.BR}${formatter.left}")
         }catch (e: Exception){
-            content.toString().replace("\n", "\n${formatter.left}")
+            content.toString().replace("\n", "${Formatter.BR}${formatter.left}")
         }
-        return "$header$logContent"
     }
 
     /**
@@ -55,7 +66,7 @@ internal class MapPrintHandler : BasePrintHandler(), Parsable<Map<*, *>> {
         val originMap = this
         return JSONObject().also { jsonObject->
             val firstValue = originMap.values.firstOrNull()
-            val isPrimitiveType = isPrimitiveTypeValue(firstValue)
+            val isPrimitiveType = isPrimitiveTypeToString(firstValue)
             originMap.keys.map {item->
                 item?:return@map
                 if (isPrimitiveType) {
