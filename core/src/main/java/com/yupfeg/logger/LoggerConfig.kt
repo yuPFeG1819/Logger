@@ -14,6 +14,7 @@ import com.yupfeg.logger.printer.ILogPrinter
 class LoggerConfig {
     /**
      * 日志额外信息集合
+     * - 每一个集合元素，单独占据一行
      * */
     var logHeaders : List<String>? = null
     /**
@@ -40,7 +41,18 @@ class LoggerConfig {
     var logPrinters : List<ILogPrinter> ?= null
 
     /**
-     * 对象json格式化解析类，默认使用Gson
+     * 是否开启json格式化日志内容
+     * - 设置为true后，会对所有原始日志内容进行json解析格式化，相对美观方便查看日志，但会导致单条日志内容篇幅过多
+     * - 默认为false，只通过`formatter`对日志内容添加额外的日志框美化，
+     * 但需要注意日志的输出内容类型能够正常调用`toString`，
+     * 或者在对应类型的`PrintHandler`内重写`formatLogContentOnlyWrap`方法进行特殊处理
+     * */
+    var isJsonParseFormat : Boolean = false
+
+    /**
+     * 日志内容对象进行json解析格式化的解析类
+     * - 由外部控制使用何种json库进行json解析，如果为null，则默认内部会使用GSON进行解析
+     * - 需要配合[isJsonParseFormat]设置为true使用
      * */
     var jsonConverter : JsonConverter? = null
 
@@ -56,4 +68,9 @@ class LoggerConfig {
      * * 需要配合[isDisplayClassInfo]属性为true才能生效
      * */
     var invokeStackFilters : List<ILogInvokeStackFilter>? = null
+
+    /**
+     * 全局的日志过滤等级
+     * */
+    var globalLogFilterLevel : LoggerLevel = LoggerLevel.VERBOSE
 }

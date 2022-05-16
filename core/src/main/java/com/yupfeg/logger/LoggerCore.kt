@@ -39,6 +39,7 @@ internal class LoggerCore(private val config : LoggerConfig) {
             logHeaders = config.logHeaders,
             isPrintClassInfo = config.isDisplayThreadInfo,
             isPrintThreadInfo = config.isDisplayClassInfo,
+            isJsonParseFormatEnable = config.isJsonParseFormat,
             jsonConverter = config.jsonConverter ?: GsonConverter(),
             isMultiPrinter = printers.size > 1,
             invokeStackFilters = filters
@@ -75,6 +76,7 @@ internal class LoggerCore(private val config : LoggerConfig) {
             this += ThrowablePrintHandler()
             this += BundlePrintHandler()
             this += IntentPrintHandler()
+            this += UriPrintHandler()
             this += MapPrintHandler()
             this += CollectionPrintHandler()
             this += ObjectPrintHandler()
@@ -91,7 +93,6 @@ internal class LoggerCore(private val config : LoggerConfig) {
         config.invokeStackFilters?.also {
             filters += it
         }
-
         filters+= DefaultLogInvokeStackFilter()
         return filters
     }
@@ -114,6 +115,7 @@ internal class LoggerCore(private val config : LoggerConfig) {
 
     /**
      * 根据日志处理链输出日志
+     * - 日志输出的实际入口
      * @param level 日志等级
      * @param tag 日志tag，默认为[mGlobalLogTag]
      * @param message 日志内容
@@ -123,6 +125,9 @@ internal class LoggerCore(private val config : LoggerConfig) {
         tag : String?,
         message : Any
     ){
+        //过滤指定等级的日志，不进行处理
+        if (level.value < config.globalLogFilterLevel.value) return
+
         val request = LogPrintRequest.obtain().apply {
             setNewContent(level,tag?:mGlobalLogTag,message)
         }
