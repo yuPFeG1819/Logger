@@ -1,8 +1,7 @@
 package com.yupfeg.logger.handle
 
-import com.yupfeg.logger.converter.JsonConverter
-import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.LogPrintRequest
+import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.handle.parse.Parsable
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -21,24 +20,25 @@ internal class ThrowablePrintHandler : BasePrintHandler(), Parsable<Throwable> {
         return request.logContent is Throwable
     }
 
+    override fun formatLogContentOnlyWrap(
+        logFormatter: Formatter,
+        request: LogPrintRequest
+    ) = formatLogContent(logFormatter, request)
+
     override fun formatLogContent(logFormatter: Formatter, request: LogPrintRequest): String {
         val formatContent = getLogFormatContentWrap(logFormatter)
         return String.format(
             formatContent,parse2String(
-                request.logContent as Throwable,logFormatter,globalJsonConverter
+                request.logContent as Throwable,logFormatter
             )
         )
     }
 
-    override fun parse2String(
-        content: Throwable,
-        formatter: Formatter,
-        jsonConverter: JsonConverter
-    ): String {
+    override fun parse2String(content: Throwable, formatter: Formatter): String {
         val sw = StringWriter(DEF_STRING_WRITER_SIZE)
         val pw = PrintWriter(sw, false)
         content.printStackTrace(pw)
         pw.flush()
-        return sw.toString().replace("\n", "\n${formatter.left}")
+        return sw.toString().replace("\n", "${Formatter.BR}${formatter.left}")
     }
 }
