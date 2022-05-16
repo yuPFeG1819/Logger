@@ -65,6 +65,12 @@ abstract class BasePrintHandler {
         get() = printHandleConfig.jsonConverter
 
     /**
+     * 是否对日志内容开启json解析格式化
+     * */
+    protected val isJsonParseFormatEnable : Boolean
+        get() = printHandleConfig.isJsonParseFormatEnable
+
+    /**
      * 设置下一个处理节点
      * @param chain
      * */
@@ -79,6 +85,8 @@ abstract class BasePrintHandler {
      */
     internal fun handlePrintContent(request : LogPrintRequest){
         prepareHandle(request)
+        //没有配置输出类，不会处理任何日志输出
+        if (printHandleConfig.printers.isNullOrEmpty()) return
         if (!isHandleContent(request)){
             nextHandlerChain(request)
         }else{
@@ -135,7 +143,11 @@ abstract class BasePrintHandler {
     ){
         val cache = tryGetPrintContentCache(printer.logFormatter, printHandleConfig.printers.size)
         val logContent = if (cache.isNullOrEmpty()) {
-            val newContent = formatLogContent(printer.logFormatter,request)
+            val newContent = if (isJsonParseFormatEnable){
+                formatLogContent(printer.logFormatter,request)
+            }else{
+                formatLogContentOnlyWrap(printer.logFormatter,request)
+            }
             if (printHandleConfig.isMultiPrinter){
                 //只有存在多个输出类时才开启缓存
                 savePrintCache(printer.logFormatter,newContent)
@@ -145,6 +157,21 @@ abstract class BasePrintHandler {
             cache
         }
         printer.printLog(request.logLevel,request.logTag,logContent)
+    }
+
+    /**
+     * 只对日志内容进行包装格式化，需要确保原始日志内容`toString`方法正常调用
+     * @param logFormatter 日志内容的包装格式化类型
+     * @param request 日志输出请求
+     * @return 格式化包装后的日志内容字符串
+     * */
+    protected open fun formatLogContentOnlyWrap(
+        logFormatter: Formatter,
+        request: LogPrintRequest
+    ) : String{
+        val logContentFormat = getLogFormatContentWrap(logFormatter)
+        val logContent = request.logContent.toString()
+        return String.format(logContentFormat,logContent)
     }
 
     /**
@@ -158,6 +185,7 @@ abstract class BasePrintHandler {
      * 格式化输出日志内容
      * - 默认如果存在相同格式化类的日志内容，则该方法只会调用一次
      * - 默认调用于输出目标类的遍历内，注意避免频繁创建对象
+     * - 如果设置了`isJsonParseFormat`为false，默认不会调用该函数，会调用`formatLogContentOnlyWrap`方法
      * @param logFormatter 日志内容的格式化类
      * @param request 当前日志输出请求
      * @return 需要输出的日志内容
