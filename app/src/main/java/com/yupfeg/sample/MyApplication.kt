@@ -18,13 +18,14 @@ class MyApplication : Application(){
     override fun onCreate() {
         super.onCreate()
         //初始化日志管理器
-        Logger.prepare(fun LoggerConfig.() {
+        Logger.prepare{
             isDisplayClassInfo = true
+            isJsonParseFormat = false
             logHeaders = listOf(
                 "test log headers", "second log header"
             )
-            logPrinters = listOf(LogcatPrinter(), TestPrinter())
-        })
+            logPrinters = listOf(LogcatPrinter(enable = true))
+        }
     }
 }
 

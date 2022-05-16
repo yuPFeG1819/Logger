@@ -6,6 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
+        android:id="@+id/tv_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="print log to logcat"
@@ -16,6 +17,17 @@
         app:layout_constraintBottom_toBottomOf="parent"
         tools:ignore="HardcodedText"
         />
+
+    <Button
+        android:id="@+id/btn_test_print_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="输出测试日志"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_test"
+        android:layout_marginTop="20dp"
+        tools:ignore="HardcodedText" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
