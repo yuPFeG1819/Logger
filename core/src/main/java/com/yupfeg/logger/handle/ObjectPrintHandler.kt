@@ -23,19 +23,15 @@ internal class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
         val logFormat = getLogFormatContentWrap(logFormatter)
         val originContent = request.logContent
         val logContent = "${originContent.javaClass}${Formatter.BR}${logFormatter.left} " +
-                parse2String(originContent,logFormatter,globalJsonConverter)
+                parse2String(originContent,logFormatter)
         return String.format(logFormat,logContent)
     }
 
-    override fun parse2String(
-        content: Any,
-        formatter: Formatter,
-        jsonConverter: JsonConverter
-    ): String {
+    override fun parse2String(content: Any, formatter: Formatter): String {
         return try {
-            parse2JsonString(content, formatter, jsonConverter)
+            parse2JsonString(content, formatter, globalJsonConverter)
         }catch (e : Exception){
-            content.toString().replace("\n", "\n${formatter.left}")
+            content.toString().replace("\n", "${Formatter.BR}${formatter.left}")
         }
     }
 
@@ -47,6 +43,6 @@ internal class ObjectPrintHandler : BasePrintHandler(), Parsable<Any> {
     ) : String{
         return jsonConverter.toJson(content).run { JSONObject(this) }
             .formatJSONString()
-            .replace("\n", "\n${formatter.left}")
+            .replace("\n", "${Formatter.BR}${formatter.left}")
     }
 }
