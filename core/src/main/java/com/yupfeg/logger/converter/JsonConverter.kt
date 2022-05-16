@@ -50,11 +50,11 @@ fun JSONArray.formatJSONString(spaces: Int = JSON_INDENT) : String = this.toStri
 
 
 /**
- * 判断 [value] 是否为基本数据类型，可以直接使用`toString`转化为字符串，不需要特殊处理
+ * 判断 [value] 是否为基本数据类型，如果是基础类型则可以直接使用`toString`正确转化为字符串，不需要特殊处理
  * - 通常用于泛型类型的判断，非基本数据类型需要进行特殊处理
  * @param value 集合、键值对，内部的值
  */
-fun isPrimitiveTypeValue(value: Any?) = when(value){
+fun isPrimitiveTypeToString(value: Any?) = when(value){
     is Boolean -> true
     is Char    -> true
     is Byte    -> true
@@ -79,7 +79,7 @@ internal fun Bundle.parseToJSONObject(jsonConverter: JsonConverter) : JSONObject
         bundle.keySet().forEach {
             val value = bundle.get(it)
             value?:return@forEach
-            val isPrimitiveType = isPrimitiveTypeValue(value)
+            val isPrimitiveType = isPrimitiveTypeToString(value)
             if (isPrimitiveType) {
                 jsonObject.put(it, value)
             } else {
