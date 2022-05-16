@@ -5,7 +5,7 @@ import com.yupfeg.logger.handle.wrap.ILogInvokeStackFilter
 import com.yupfeg.logger.printer.ILogPrinter
 
 /**
- * 日志的输出配置类，不可变对象
+ * 日志输出处理的配置类，不可变对象
  * - 仅在内部全局初始化时赋值
  * @author yuPFeG
  * @date 2022/03/31
@@ -19,6 +19,8 @@ data class PrintHandleConfig internal constructor(
     val isPrintThreadInfo : Boolean = true,
     /**是否在日志中打印当前打印日志的位置*/
     val isPrintClassInfo : Boolean = true,
+    /**是否开启对日志内容进行json解析格式化*/
+    val isJsonParseFormatEnable : Boolean = false,
     /**json解析器*/
     val jsonConverter: JsonConverter,
     /**是否存在多个输出器*/
