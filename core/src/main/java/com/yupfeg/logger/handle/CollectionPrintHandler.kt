@@ -2,7 +2,7 @@ package com.yupfeg.logger.handle
 
 import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.converter.formatJSONString
-import com.yupfeg.logger.converter.isPrimitiveTypeValue
+import com.yupfeg.logger.converter.isPrimitiveTypeToString
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.LogPrintRequest
 import com.yupfeg.logger.handle.parse.Parsable
@@ -25,38 +25,42 @@ internal class CollectionPrintHandler : BasePrintHandler(), Parsable<Collection<
         return request.logContent is Collection<*>
     }
 
+    override fun formatLogContentOnlyWrap(
+        logFormatter: Formatter,
+        request: LogPrintRequest
+    ): String {
+        val collect = (request.logContent as Collection<*>)
+        val extraContent = String.format(mListHeaderFormat, collect.javaClass, collect.size)
+        val logFormatContent = getLogFormatContentWrap(logFormatter)
+        return String.format(
+            logFormatContent, "${extraContent}${logFormatter.left}${collect}"
+        )
+    }
+
     override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
         val collect = (request.logContent as Collection<*>)
         val firstItem = collect.firstOrNull()
-        val isPrimitiveType = isPrimitiveTypeValue(firstItem)
         val extraContent = String.format(mListHeaderFormat, collect.javaClass, collect.size)
         val logFormatContent = getLogFormatContentWrap(logFormatter)
-        return if (isPrimitiveType){
+        return if (isPrimitiveTypeToString(firstItem)){
             //集合内部是基本数据类型，直接添加`toString`的内容
             String.format(
                 logFormatContent, "${extraContent}${logFormatter.left}${collect}"
             )
         }else{
-            //其他数据类型，需要特殊json解析处理
-            val parseContent = parse2String(
-                collect,logFormatter,globalJsonConverter
-            )
+            //其他数据类型，需要特殊解析处理
+            val parseContent = parse2String(collect,logFormatter)
             String.format(logFormatContent, "${extraContent}$parseContent")
         }
     }
 
-    override fun parse2String(
-        content: Collection<*>,
-        formatter: Formatter,
-        jsonConverter: JsonConverter
-    ): String {
+    override fun parse2String(content: Collection<*>, formatter: Formatter): String {
         return try {
-            content
-                .parseToJSONArray(jsonConverter)
+            content.parseToJSONArray(globalJsonConverter)
                 .formatJSONString()
-                .replace("\n", "\n${formatter.left}")
+                .replace("\n", "${Formatter.BR}${formatter.left}")
         }catch (e : Exception){
-            content.toString().replace("\n", "\n${formatter.left}")
+            content.toString().replace("\n", "${Formatter.BR}${formatter.left}")
         }
     }
 
