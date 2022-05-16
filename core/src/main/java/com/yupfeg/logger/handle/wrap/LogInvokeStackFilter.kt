@@ -22,14 +22,13 @@ interface ILogInvokeStackFilter {
 internal class DefaultLogInvokeStackFilter : ILogInvokeStackFilter{
     override fun onFilter(element: StackTraceElement): Boolean {
         val name = element.className
-        val fileName = element.fileName
+        //避免混淆情况下，可能获取不到栈的类名
+        if (name.isNullOrEmpty()) return false
         return name != ILogPrinter::class.java.name
                 && name != BasePrintHandler::class.java.name
                 && name != Logger::class.java.name
                 && name != LoggerCore::class.java.name
                 && !name.contains("LoggerExtKt")
-                && !fileName.contains("LoggerExt.kt")
-                && !fileName.contains("LoggerCore")
     }
 
 }

@@ -56,10 +56,11 @@ class LogContentWrapHelper internal constructor(
         logHeaders : List<String>?
     ){
         logHeaders?.takeIf { it.isNotEmpty() }
-            ?.map {header->
-                append(formatter.left)
-                append("$header \n")
-            }?.also {
+            ?.also { headers->
+                for (header in headers) {
+                    append(formatter.left)
+                    append("$header ${Formatter.BR}")
+                }
                 deleteCharAt(this.lastIndex)
                 append(formatter.middle)
             }
@@ -85,32 +86,45 @@ class LogContentWrapHelper internal constructor(
      * */
     private fun StringBuilder.appendLogInvokeStack(formatter: Formatter){
         val sElements = Thread.currentThread().stackTrace
+        if (sElements.isNullOrEmpty()) return
         val stackOffset = sElements.calculateStackOffset()
-        val currTargetStackItem = sElements[stackOffset]
-        append(formatter.left)
-        append(currTargetStackItem.className)
-            .append(".")
-            .append(currTargetStackItem.methodName)
-            .append(" ")
-            .append("(")
-            .append(currTargetStackItem.fileName)
-            .append(": line :")
-            .append(currTargetStackItem.lineNumber)
-            .append(")")
-            .append(formatter.middle)
+        sElements[stackOffset]?.apply {
+            append(formatter.left)
+            append(if (className.isNullOrEmpty()) "unknownClass" else className)
+            append(".")
+            append(if (methodName.isNullOrEmpty()) "unknownMethod" else methodName)
+            append(" (")
+            append(if (fileName.isNullOrEmpty()) "UnknownFile" else fileName)
+            append(" : line :")
+            append(lineNumber)
+            append(")")
+            append(formatter.middle)
+        }
     }
 
     /**
      * [StackTraceElement]数组的拓展函数，计算调用栈的调用层次
      * */
-    private fun Array<StackTraceElement>.calculateStackOffset(): Int {
+    private fun Array<StackTraceElement?>.calculateStackOffset(): Int {
         var i = MIN_STACK_OFFSET
         looper@ while (i < this.size) {
             var isFilter: Boolean
             val currElement = this[i]
-            filterFor@ for (stackFilter in printHandleConfig.invokeStackFilters){
-                isFilter = stackFilter.onFilter(currElement)
-                //不满足其中一个过滤器条件，抛弃该栈信息
+            currElement?:continue@looper
+            for (stackFilter in printHandleConfig.invokeStackFilters){
+                //在混淆条件下，特定的栈信息里的名称可能为空，如果此时使用栈的类名进行判断会有空指针风险
+                isFilter = try {
+                    if (currElement.className.isNotEmpty()){
+                        stackFilter.onFilter(currElement)
+                    }else{
+                        false
+                    }
+                }catch (e : Exception){
+                    //ignore
+                    false
+                }
+
+                //只要不满足其中一个过滤器条件，抛弃该栈信息
                 if (!isFilter) {
                     i++
                     continue@looper
@@ -137,7 +151,7 @@ class LogContentWrapHelper internal constructor(
             append(sElement.methodName)
             append(" ")
             append("(")
-            append(sElement.fileName)
+            append(sElement.fileName?:"UnknownFile")
             append(": line :")
             append(sElement.lineNumber)
             append(")")
