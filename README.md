@@ -24,44 +24,54 @@ dependencies {
 ```
 
 ## 更新日志
-- v1.2.3
+
+- **v1.3.0**
+  1. 修复混淆情况下，计算日志调用栈的空指针问题
+  2. 新增全局日志json格式化解析开关
+  3. 新增全局日志等级过滤配置    
+  4. 修改`Logger`类作为壳对象，提供对象作用域的局部日志tag
+  5. 新增内置的`Uri`类型日志内容处理器
+- **v1.2.3**
   1. 分离不可变的日志全局配置，明确日志输出请求类的职责，避免超出职责范围外的操作
-- v1.2.2
+- **v1.2.2**
   1. 优化日志请求的对象缓存池结构为单链表的栈结构，适当提高默认最大缓存池数量，避免频繁创建新对象，合并对象池功能到静态方法，简化外部调用需要传递对象池的问题
-- v1.2.1
+- **v1.2.1**
   1. 修复日志类型处理器的并发同步问题，避免同一个类型处理器在并发处理多个日志内容时，日志格式化字符串缓存获取异常问题
-- v1.2.0
+- **v1.2.0**
   1. 整合`Logger`全局配置逻辑，移除所有单独动态设置配置方法，避免在日志输出后修改配置，kotlin-dsl方式的配置逻辑不受影响，限制只能调用执行一次，再次调用则报错
   2. 新增日志输出请求类`LogPrintRequest`的缓存复用机制，避免在频繁输出日志情况下，频繁创建销毁日志请求对象。
-- v1.1.2
+- **v1.1.2**
   1. 替换默认输出Logcat的格式类
-- v1.1.0
+- **v1.1.0**
   1. 迁移`Logger`类内部输出的格式化日志逻辑 
   2. 优化修改`PrintHandler`的逻辑，并添加存在多个日志输出类时的缓存机制，避免重复格式化日志操作
   3. 将日志输出抽象为发起日志请求`LogPrintRequest`，由请求类包装所有日志输出配置，移除对Logger类的依赖
   4. 对外开放提供设置json解析器的功能，将内置gson解析内聚到一个类，内部的json解析拓展函数移除对Logger类的依赖
   5. 优化添加日志类型解析器的逻辑，只能添加到头节点优先执行，并对外隐藏所有内置的日志内容类型解析器，避免添加重复类型解析器
-- v1.0.4
+- **v1.0.4**
   1. 移除默认添加LogcatPrint,将日志输出策略完全交由外部控制，避免外部无法控制
-- v1.0.3
+- **v1.0.3**
   1. 抽象json解析的`converter`类，允许外部配置json解析策略
 ## 简单使用
 
 通过`kotlin`的**top-level**函数包装，可在外部通过导入`com.yupfeg.logger.ext`包直接调用
-> `1.0.4`版本后，需要通过`Logger.addPrinter`配置继承添加`LogcatPrint`才能将日志输出到Logcat。
-> 或者通过kotlin-dsl方式，通过`setDslLoggerConfig`函数的`logPrinters`属性添加`LogcatPrint`类对象
+> `1.0.4`版本后，需要通过`Logger.addPrinter`配置添加`LogcatPrint`输出类才能将日志输出到Logcat。
+> 或者通过kotlin-dsl方式，通过~~`setDslLoggerConfig`~~(`1.3.0`版本后使用`Logger.prepare`)函数的`logPrinters`属性添加`LogcatPrint`类对象
+> 
+> 在`1.3.0`版本后，**必须**先调用`Logger.prepare`进入初始化后，才能正常输出。
+> 并且将`logd`等顶层函数修改为`loggd`，避免与AS自带模板冲突，导致无法快速导入。
 
 
 ```kotlin
-logv()
+loggv()
 
-logi()
+loggi()
 
-logd()
+loggd()
 
-logw()
+loggw()
 
-loge()
+logge()
 ```
 
 只要存在对应类型的`PrintHandler`解析类都能将其转化为`String`进行输出
@@ -148,10 +158,10 @@ D/logger: -print to logcat-
 
 ## 进阶配置
 
-使用`Kotlin`可通过`setDslLoggerConfig`函数通过kotlin-dsl方式配置`Logger`
+使用`Kotlin`可通过~~`setDslLoggerConfig`函数~~(`1.3.0`版本后使用`Logger.prepare`)通过kotlin-dsl方式配置`Logger`参数 
 
 ``` kotlin
-setDslLoggerConfig {
+Logger.prepare {
     //全局日志tag
     tag = "customTag"
     //是否显示当前线程信息
@@ -166,11 +176,12 @@ setDslLoggerConfig {
     logPrinters = listOf(LogcatPrinter())
     //日志内容解析器，通常不需要额外配置，内置已能满足日常使用
     printHandlers = listOf(...)
-    //默认的内置了gson解析类
+    //是否开启使用json格式化解析，默认为false
+    isJsonParseFormat = false
+    //默认的内置了gson解析类，需要与`isJsonParseFormat = true`配合使用
     jsonConverter = GsonConverter()  
-    //日志输出请求的包装对象的缓存池大小，默认为10
-    requestPoolSize = 10
-    
+    //日志输出请求的包装对象的缓存池大小，默认为30
+    requestPoolSize = 30
 }
 ```
 
@@ -187,6 +198,29 @@ setDslLoggerConfig {
 >
 > - ~~或者直接通过`Logger.addLogHeaders`函数添加。~~（v1.2.0版本后已移除，整合`Logger.prepare`方法内配置）
 
+### 日志tag作用域
+
+在`1.3.0`版本后，新增日志tag作用域的概念。
+- 临时日志tag ：
+  仅作用于**单次日志输出**的tag标签，在调用日志输出方法时，传入`tag`参数
+  通常在一些场景需要输出到特别tag标签时使用
+  ```kotlin
+  val log = Logger.create("")
+  log.d(tag = "tempTag",msg = "...")
+  ```
+- 局部日志tag
+  作用于所有的日志输出壳对象`Logger`输出的日志，只要不传入`tag`参数就都会采用壳对象创建时的tag
+  ```kotlin
+  val log = Logger.create("localTag")
+  log.d("...")
+  ```
+- 全局日志tag
+   在`Logger.prepare`配置的`tag`，默认为"logger"。
+   直接使用`top-level`的日志输出方法，就是直接使用全局日志tag
+  ```kotlin
+  logd(msg = "...")
+  ``` 
+
 ### JSON解析
 
 增加`Converter`层，隔离具体json解析策略
@@ -196,6 +230,9 @@ setDslLoggerConfig {
 > ~~外部可实现`JsonConverter`接口创建自定义json解析策略，然后调用`Logger.jsonConverter`设置对日志内容的解析策略~~
 >
 > 在v1.2.0版本之后已移除，整合到`Logger.prepare`方法内配置`jsonConverter`属性。
+> 
+> 在v1.3.0版本，新增json格式化解析开关，当不允许日志进行json格式化解析时，不采用`JsonConverter`实现类对日志内容进行解析，
+> 而是直接使用`toString`方法进行解析，如需额外处理请重写对应类型解析器的的`formatLogContentOnlyWrap`方法。
 
 
 ### 类型解析处理
@@ -205,6 +242,7 @@ setDslLoggerConfig {
 - `ThrowablePrintHandler`
 - `BundlePrintHandler`
 - `IntentPrintHandler`
+- `UriPrintHandler` ，`1.3.0`版本新增
 - `MapPrintHandler`
 - `CollectionPrintHandler`
 - `ObjectPrintHandler` ， 作为兜底的解析类型处理器
