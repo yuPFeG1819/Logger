@@ -1,6 +1,5 @@
 package com.yupfeg.logger.handle.parse
 
-import com.yupfeg.logger.converter.JsonConverter
 import com.yupfeg.logger.formatter.Formatter
 
 /**
@@ -13,7 +12,6 @@ internal interface Parsable<T> {
      * 指定对象类型解析成字符串
      * @param content 日志输出对象
      * @param formatter 日志输出格式化类型
-     * @param jsonConverter json解析器
      * */
-    fun parse2String(content : T,formatter : Formatter,jsonConverter: JsonConverter) : String
+    fun parse2String(content : T, formatter : Formatter) : String
 }
