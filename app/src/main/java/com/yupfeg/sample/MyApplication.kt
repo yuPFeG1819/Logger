@@ -1,8 +1,9 @@
 package com.yupfeg.sample
 
 import android.app.Application
+import com.yupfeg.logger.Logger
+import com.yupfeg.logger.LoggerConfig
 import com.yupfeg.logger.LoggerLevel
-import com.yupfeg.logger.ext.setDslLoggerConfig
 import com.yupfeg.logger.formatter.Formatter
 import com.yupfeg.logger.formatter.SimpleFormatterImpl
 import com.yupfeg.logger.printer.ILogPrinter
@@ -17,13 +18,13 @@ class MyApplication : Application(){
     override fun onCreate() {
         super.onCreate()
         //初始化日志管理器
-        setDslLoggerConfig {
+        Logger.prepare(fun LoggerConfig.() {
             isDisplayClassInfo = true
             logHeaders = listOf(
-                "test log headers","second log header"
+                "test log headers", "second log header"
             )
-            logPrinters = listOf(LogcatPrinter(),TestPrinter())
-        }
+            logPrinters = listOf(LogcatPrinter(), TestPrinter())
+        })
     }
 }
 
