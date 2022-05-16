@@ -15,10 +15,16 @@ class Logger private constructor(private val globalTag : String?) {
         @Volatile
         private var loggerCore : LoggerCore? = null
 
+        @Volatile
+        private var global : Logger? = null
+
         /**
-         * 全局的日志类，简化日志输出操作
+         * 全局的日志类，简化全局日志输出操作
          * */
-        internal val GLOBAL = Logger(null)
+        internal val GLOBAL : Logger
+            get() = global ?: synchronized(this){
+                global?: Logger(null).also { global = it }
+            }
 
         /**
          * 是否已进行初始化
@@ -28,8 +34,9 @@ class Logger private constructor(private val globalTag : String?) {
         /**
          * 以kotlin-dsl的方式，初始化日志库配置
          * @param init dsl配置方法
-         * @return Lo
+         * @return 全局日志Tag的壳对象
          * */
+        @JvmStatic
         fun prepare(init : LoggerConfig.()->Unit) : Logger{
             return LoggerConfig().let {config->
                 config.init()
@@ -40,11 +47,14 @@ class Logger private constructor(private val globalTag : String?) {
          * 准备日志库配置
          * - 必须在执行[prepare]后，并配置日志输出目标才能才能输出日志
          * @param config 配置方法类
+         * @return 全局日志Tag的壳对象
          * */
         @JvmStatic
+        @Synchronized
         fun prepare(config: LoggerConfig) : Logger{
             require(!isPrepared){ "cant replay prepare Logger，only config once" }
             logConfig = config
+            isPrepared = true
             return GLOBAL
         }
 
@@ -68,7 +78,7 @@ class Logger private constructor(private val globalTag : String?) {
     private var isEnable = true
 
     /**
-     * 关闭壳对象的日志输出
+     * 关闭当前日志tag作用域的日志输出
      * */
     fun silence() : Logger{
         this.isEnable = false
@@ -135,7 +145,7 @@ class Logger private constructor(private val globalTag : String?) {
      * - 优先以当前壳对象的局部日志tag
      * @param msg 日志内容
      */
-    fun e(msg: Any?) = w(globalTag,msg)
+    fun e(msg: Any?) = e(globalTag,msg)
     /**
      * 输出error等级日志
      * @param tag 临时日志tag,如果为null，则使用当前对象的局部日志tag
