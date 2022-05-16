@@ -25,20 +25,15 @@ internal class IntentPrintHandler : BasePrintHandler(), Parsable<Intent> {
     override fun formatLogContent(logFormatter: Formatter, request : LogPrintRequest): String {
         val format = getLogFormatContentWrap(logFormatter)
         return String.format(
-            format, parse2String(request.logContent as Intent,logFormatter,globalJsonConverter)
+            format, parse2String(request.logContent as Intent,logFormatter)
         )
     }
 
-    override fun parse2String(
-        content: Intent,
-        formatter: Formatter,
-        jsonConverter: JsonConverter
-    ): String {
+    override fun parse2String(content: Intent, formatter: Formatter): String {
         val header = "${content.javaClass}${Formatter.BR}${formatter.left}"
-        val intentJsonContent = createIntentJSONObject(content,jsonConverter)
+        return header + createIntentJSONObject(content,globalJsonConverter)
             .formatJSONString()
-            .replace("\n", "\n${formatter.left}")
-        return header + intentJsonContent
+            .replace("\n", "${Formatter.BR}${formatter.left}")
     }
 
     private fun createIntentJSONObject(content: Intent,jsonConverter: JsonConverter) : JSONObject{
