@@ -78,20 +78,69 @@ class Logger private constructor(private val globalTag : String?) {
 
     //<editor-fold desc="日志输出方法">
 
-    @Suppress("unused")
+    /**
+     * 输出verbose等级日志
+     * - 优先以当前壳对象的局部日志tag
+     * @param msg 日志内容
+     * */
+    fun v(msg: Any?) = v(globalTag,msg)
+    /**
+     * 输出verbose等级日志
+     * @param tag 临时日志tag,如果为null，则使用当前对象的局部日志tag
+     * @param msg 日志内容
+     * */
     fun v(tag : String?= null,msg: Any?) = performPrintLog(LoggerLevel.VERBOSE,tag,msg)
 
-    @Suppress("unused")
+    /**
+     * 输出info等级日志
+     * - 优先以当前壳对象的局部日志tag
+     * @param msg 日志内容
+     */
+    fun i(msg: Any?) = i(globalTag,msg)
+    /**
+     * 输出info等级日志
+     * @param tag 临时日志tag,如果为null，则使用当前对象的局部日志tag
+     * @param msg 日志内容
+     */
     fun i(tag: String?= null, msg : Any?) = performPrintLog(LoggerLevel.INFO,tag,msg)
 
-    @Suppress("unused")
+    /**
+     * 输出debug等级日志
+     * - 优先以当前壳对象的局部日志tag
+     * @param msg 日志内容
+     */
+    fun d(msg: Any?) = d(globalTag,msg)
+    /**
+     * 输出debug等级日志
+     * @param tag 临时日志tag,如果为null，则使用当前对象的局部日志tag
+     * @param msg 日志内容
+     */
     fun d(tag: String? = null, msg: Any?) = performPrintLog(LoggerLevel.DEBUG,tag, msg)
 
-    @Suppress("unused")
+    /**
+     * 输出warn等级日志
+     * - 优先以当前壳对象的局部日志tag
+     * @param msg 日志内容
+     */
+    fun w(msg: Any?) = w(globalTag,msg)
+    /**
+     * 输出warn等级日志
+     * @param tag 临时日志tag,如果为null，则使用当前对象的局部日志tag
+     * @param msg 日志内容
+     */
     fun w(tag: String? = null, msg: Any?) = performPrintLog(LoggerLevel.WARN,tag, msg)
 
-
-    @Suppress("unused")
+    /**
+     * 输出error等级日志
+     * - 优先以当前壳对象的局部日志tag
+     * @param msg 日志内容
+     */
+    fun e(msg: Any?) = w(globalTag,msg)
+    /**
+     * 输出error等级日志
+     * @param tag 临时日志tag,如果为null，则使用当前对象的局部日志tag
+     * @param msg 日志内容
+     */
     fun e(tag: String? = null, msg: Any?) = performPrintLog(LoggerLevel.ERROR,tag, msg)
 
     // </editor-fold>
@@ -102,7 +151,7 @@ class Logger private constructor(private val globalTag : String?) {
      * @param level 日志等级
      * @param tag 日志tag，如果为null，则使用壳对象的局部tag，
      * 如果局部tag也为null，则使用配置的全局tag。
-     * @param message 日志内容
+     * @param message 日志内容，如果为null则不进行输出
      * */
     private fun performPrintLog(
         level: LoggerLevel,
