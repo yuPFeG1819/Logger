@@ -127,9 +127,9 @@ internal class LoggerCore(private val config : LoggerConfig) {
     ){
         //过滤指定等级的日志，不进行处理
         if (level.value < config.globalLogFilterLevel.value) return
-
         val request = LogPrintRequest.obtain().apply {
-            setNewContent(level,tag?:mGlobalLogTag,message)
+            val logTag = if (tag.isNullOrEmpty()) mGlobalLogTag else tag
+            setNewContent(level,logTag,message)
         }
         mPrintHandlerChain.handlePrintContent(request)
     }
